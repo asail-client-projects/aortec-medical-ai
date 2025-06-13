@@ -1,0 +1,140 @@
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 20px;
+    background-color: #06051D;
+    color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Thin white line */
+}
+
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 80px;
+    margin-right: 10px;
+}
+
+.logo div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Align text to the left of the logo */
+}
+
+.logo h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #cccccc; /* Light gray */
+    margin: 0;
+    margin-top: 2px; /* Space between title and subtitle */
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+    color: #f9a826;
+}
+
+.cta-btn {
+    background-color: #f9a826;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.menu-icon {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.menu-icon span {
+    background-color: white;
+    height: 3px;
+    margin: 4px 0;
+    width: 25px;
+    display: block;
+}
+
+.nav-icons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.icon-btn img {
+    width: 24px;
+    height: 24px;
+}
+
+.icon-btn:hover {
+    transform: scale(1.1);
+}
+
+.icon-btn i {
+    font-size: 24px;
+    color: #ffffff;
+}
+
+.icon-btn:hover i {
+    color: #f9a826; /* Change hover color */
+}
+
+@media (max-width: 768px) {
+    nav ul {
+        display: none;
+        flex-direction: column;
+        background-color: #002f4b;
+        position: absolute;
+        top: 60px;
+        right: 0;
+        width: 100%;
+    }
+
+    nav ul.active {
+        display: flex;
+    }
+
+    .menu-icon {
+        display: flex;
+    }
+}

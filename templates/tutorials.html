@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorials | AORTEC</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tutorials.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero {
+            background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}'); /* Add background image directly here */
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Header -->
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Tutorials On Using AORTEC Efficiently</h1>
+        <p>Step-by-step video guides to help you master our platform.</p>
+    </section>
+
+    <!-- Tutorials Section -->
+    <section class="tutorials-section">
+        <div class="tutorial-card">
+            <img src="{{ url_for('static', filename='images/tutorial-img1.jpg') }}" alt="Extracting DICOM Files">
+            <h2>Extracting DICOM Files</h2>
+            <p>Learn how to extract and prepare DICOM files for use in the AORTEC platform.</p>
+            <a href="{{ url_for('static', filename='images/tutorial-vedio3.mp4') }}" class="btn">View Tutorial</a>
+        </div>
+        <div class="tutorial-card">
+            <img src="{{ url_for('static', filename='images/tutorial-img2.jpg') }}" alt="Using the AORTEC Extensions">
+            <h2>Explore Our Advanced Extensions</h2>
+            <p>Enhance your medical analysis with specialized tools for AAA cases, including automated measurement, growth prediction, and rupture risk evaluation.</p>
+            <a href="{{ url_for('static', filename='images/tutorial-vedio3.mp4') }}" class="btn">View Tutorial</a>
+        </div>
+        <div class="tutorial-card">
+            <img src="{{ url_for('static', filename='images/tutorial-img3.jpg') }}" alt="Working with 3D Models">
+            <h2>Working with 3D Models</h2>
+            <p>Tips and best practices for interacting with 3D models on the AORTEC platform.</p>
+            <a href="{{ url_for('static', filename='images/tutorial-vedio3.mp4') }}" class="btn">View Tutorial</a>
+        </div>
+    </section>
+
+    <!-- Include Footer -->
+    {% include 'footer.html' %}
+</body>
+</html>

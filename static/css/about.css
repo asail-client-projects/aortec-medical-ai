@@ -1,0 +1,92 @@
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+    /*background-image: url('../static/images/hero-image-contact.png'); /* Add background image */
+    background-size: cover; /* Ensure the image covers the section */
+    background-position: center;
+    height: 20vh; /* Adjust height */
+    color: white;
+}
+
+.hero h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    color: #f9a826;
+}
+
+.hero p {
+    font-size: 16px;
+}
+
+/* Card Container */
+.card-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Default to one column */
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Large Card */
+.large-card {
+    grid-column: span 2; /* Take up the entire width */
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: left;
+}
+
+/* Standard Cards */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: left;
+}
+
+.card h2 {
+    font-size: 24px;
+    color: #005f73;
+    margin-bottom: 10px;
+}
+
+.card p, .card ul li {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.card ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+/* Hover Effects */
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Grid */
+@media (min-width: 768px) {
+    .card-container {
+        grid-template-columns: repeat(2, 1fr); /* Two columns for medium screens */
+    }
+
+    .large-card {
+        grid-column: span 2; /* Large card spans across both columns */
+    }
+}

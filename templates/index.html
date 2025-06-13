@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- server: http://127.0.0.1:5000/ -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AORTEC - Welcome</title>
+    <!-- Link to static CSS files using Flask's url_for function -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero {
+            background-image: url('{{ url_for("static", filename="images/hero-image.png") }}'); /* Add background image directly here */
+        }
+    </style>
+
+</head>
+<body>
+    <!-- Include Header -->
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+             <!--<h2>Welcome to </h2> -->
+            <h1>AORTEC Website</h1>
+            <p>Your Gateway to Advanced Aortic Aneurysm Solutions</p>
+            <br>
+            <button onclick="location.href='{{ url_for('segmentation') }}'" class="btn-primary">Get Started</button>
+            <!-- <a href="{{ url_for('segmentation') }}" class="btn-secondary">Get Started</a>  -->
+        </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="introduction">
+        <div class="intro-container">
+            <div class="intro-text">
+                <h2>About AORTEC</h2>
+                <p>AORTEC transforms CT scans into precise 3D models, revolutionizing medical training and patient outcomes. With advanced tools and innovative services, we empower healthcare professionals to achieve excellence.</p>
+                <button onclick="location.href='{{ url_for('about') }}'" class="btn-primary">Learn More</button>
+            </div>
+            <div class="intro-image">
+                <img src="{{ url_for('static', filename='images/aortic-model.png') }}" alt="Aortic 3D Model Illustration">
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services">
+        <h2>Our Services</h2>
+        <div class="service-cards">
+            <div class="service-card">
+                <img src="{{ url_for('static', filename='images/segmentation-icon.png') }}" alt="Segmentation Tool">
+                <h3>Segmentation</h3>
+                <p>Upload and segment AAA CT scans with precision.</p>
+                <a href="{{ url_for('segmentation') }}" class="btn-secondary">Learn More</a>
+            </div>
+            <div class="service-card">
+                <img src="{{ url_for('static', filename='images/extensions-icon.png') }}" alt="Extensions">
+                <h3>Extensions</h3>
+                <p>Access powerful tools for image processing and conversion.</p>
+                <a href="{{ url_for('extensions') }}" class="btn-secondary">Learn More</a>
+            </div>
+            <div class="service-card">
+                <img src="{{ url_for('static', filename='images/3d-models-icon.png') }}" alt="3D Models">
+                <h3>Tutorials</h3>
+                <p>Step-by-step video tutorials  to help you master the efficient use of AORTEC website services.</p>
+                <a href="{{ url_for('tutorials') }}" class="btn-secondary">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Include Footer -->
+    {% include 'footer.html' %}
+
+</body>
+</html>

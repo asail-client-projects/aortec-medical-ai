@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segmentation | AORTEC</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/segmentation.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero {
+            background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}'); /* Add background image directly here */
+        }
+        
+        /* Additional styles for folder-only warning */
+        .warning-message {
+            color: #e74c3c;
+            margin: 10px 0;
+            font-weight: bold;
+            padding: 8px;
+            background-color: #ffe6e6;
+            border-left: 4px solid #e74c3c;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Header -->
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Medical Image Segmentation</h1>
+        <p>Welcome to the medical image processing tool. <br/>
+            Here, you can convert DICOM files to images, apply segmentation, or generate a 3D model. Select a service below to begin.</p>
+    </section>
+
+    <!-- Service Selection Section -->
+    <section class="service-selection">
+        <h2>Select a Service</h2>
+        <div class="card-container">
+            <div class="card" data-service="image_conversion">
+                <img src="{{ url_for('static', filename='images/extentions-par1.png') }}" alt="DICOM to Image Converter" class="card-image">
+                <h3>DICOM to Image Converter</h3>
+                <p>Convert DICOM files into standard image formats. Upload single files, multiple files, or entire folders.</p>
+            </div>
+            <div class="card" data-service="model3D">
+                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="3D Model Generator" class="card-image">
+                <h3>3D Model Generator</h3>
+                <p>Generate a 3D model from a complete series of DICOM files and view it in STL format.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Service Sections -->
+    <section id="service-details" style="display: none;">
+        <!-- Dynamic content will be inserted here -->
+    </section>
+    
+    
+    <!-- Include Footer -->
+    {% include 'footer.html' %}
+    
+    <script src="{{ url_for('static', filename='js/segmentation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/file-utils.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Extensions | AORTEC</title>
+        <!-- Add common.css as the first CSS file -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/extensions.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+        <style>
+            .hero {
+                background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}');
+            }
+        </style>
+    </head>
+<body>
+    <!-- Include Header -->
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Explore Our Advanced Extensions</h1>
+        <p>Enhance your medical analysis with our specialized tools designed for AAA cases</p>
+    </section>
+
+    <!-- Extensions Section -->
+    <section class="extensions">
+        <div class="extensions-container">
+            <!-- Extension 1: Automated Measurement -->
+            <div class="extension-card" data-service="automated_measurement">
+                <img src="{{ url_for('static', filename='images/extentions-par1.png') }}" alt="Automated Measurement of AAA" class="card-image">
+                <h2>Automated Measurement of AAA</h2>
+                <p>Quickly and accurately measure the size of the aneurysm.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
+            <!-- Extension 2: Growth Rate Prediction -->
+            <div class="extension-card" data-service="growth_rate">
+                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="Predict Rate of Growth" class="card-image">
+                <h2>Predict Rate of Growth</h2>
+                <p>Estimate the growth rate of the aneurysm over time.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
+            <!-- Extension 3: Rupture Risk Prediction -->
+            <div class="extension-card" data-service="rupture_risk">
+                <img src="{{ url_for('static', filename='images/extentions-par3.png') }}" alt="Predict Risk of Rupture" class="card-image">
+                <h2>Predict Risk of Rupture</h2>
+                <p>Evaluate the risk of aneurysm rupture based on patient data.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
+            <!-- Extension 4: Simulator -->
+            <div class="extension-card" data-service="simulator">
+                <img src="{{ url_for('static', filename='images/extentions-par4.png') }}" alt="Simulator" class="card-image">
+                <h2>Simulator</h2>
+                <p>Utilize AI to segment and analyze new AAA cases efficiently.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
+            <!-- Extension 5: Other Aneurysms -->
+            <div class="extension-card" data-service="other_aneurysms">
+                <img src="{{ url_for('static', filename='images/extentions-par5.png') }}" alt="Use Segmentation for Other Aneurysms" class="card-image">
+                <h2>Use Segmentation for Other Aneurysms</h2>
+                <p>Apply our model to segment different types of aneurysms.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
+
+            <!-- New Card: Coming Soon -->
+            <div class="extension-card coming-soon">
+                <img src="{{ url_for('static', filename='images/extentions-par.png') }}" alt="Extra Extension Coming Soon" class="card-image">
+                <h2>Extra Extension Coming Soon!</h2>
+                <p>We're working on exciting new tools. Have suggestions? Share them with us!</p>
+                <a href="{{ url_for('contact') }}" class="suggest-btn">Give Suggestions</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Service Details Section (will be dynamically populated) -->
+    <section id="service-details" style="display: none;">
+        <!-- Dynamic content will be inserted here -->
+    </section>
+
+    <!-- Include Footer -->
+    {% include 'footer.html' %}
+
+    <!-- Include JavaScript file -->
+    <script src="{{ url_for('static', filename='js/extensions.js') }}"></script>
+</body>
+</html>

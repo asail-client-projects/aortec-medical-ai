@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | AORTEC</title>
+    <!-- Flask-compatible CSS links -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero {
+            background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}'); /* Add background image directly here */
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Header -->
+    {% include 'header.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>About AORTEC Website</h1>
+        <p>Learn more about us</p>
+    </section>
+
+    <!-- Card Section -->
+    <div class="card-container">
+        <!-- Large Card: About AORTEC -->
+        <div class="card large-card">
+            <h2>About AORTEC</h2>
+            <p>AORTEC transforms AAA (Abdominal Aortic Aneurysm) CT scans into 3D models, combining medical imaging, computer science, and web development to enhance diagnosis, treatment, and education.</p>
+        </div>
+
+        <!-- Row 1: Two Cards -->
+        <div class="card">
+            <h2>What is AAA?</h2>
+            <p>Abdominal Aortic Aneurysm (AAA) is the bulging or enlargement of the abdominal aorta. If untreated, it can lead to life-threatening ruptures. Early detection is essential for improved outcomes.</p>
+        </div>
+        <div class="card">
+            <h2>Challenges</h2>
+            <ul>
+                <li>Developing advanced image processing algorithms.</li>
+                <li>Segmenting the aorta and aneurysm from surrounding tissues.</li>
+                <li>Converting segmented data into a 3D mesh.</li>
+            </ul>
+        </div>
+
+        <!-- Row 2: Two Cards -->
+        <div class="card">
+            <h2>Our Aim</h2>
+            <p>AORTEC provides tools for:</p>
+            <ul>
+                <li><strong>Surgeons:</strong> 3D visualization for surgical planning.</li>
+                <li><strong>Patients:</strong> Understanding their condition better.</li>
+                <li><strong>Medical Students:</strong> Interactive study of real-world cases.</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h2>Impact</h2>
+            <ul>
+                <li>Improve patient outcomes through precise visualization.</li>
+                <li>Enhance engagement with clear medical data.</li>
+                <li>Advance training using real-world applications.</li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- Include Footer -->
+    {% include 'footer.html' %}
+
+</body>
+</html>
