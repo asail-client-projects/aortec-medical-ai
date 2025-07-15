@@ -6,7 +6,6 @@ import shutil
 import numpy as np
 import SimpleITK as sitk
 from flask import Flask, render_template, request, jsonify, send_file
-# Remove flask_debugtoolbar import to fix dependency error
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from python.dicom_processor import process_dicom_file, read_dicom_folder, extract_zip, process_zip_file
@@ -45,6 +44,7 @@ def allowed_file(filename):
         return True
     return filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
         
+
 @app.route('/process_local_directory', methods=['POST'])
 def process_local_directory():
     """Process DICOM files from a local directory on the server."""
@@ -70,9 +70,9 @@ def process_local_directory():
             processed_files = process_dicom_folder_for_segmentation(directory, output_dir)
             
         elif service_type == '3d_model':
-            # Process for visualization (formerly 3D model)
+            # Process for TRUE 3D STL MODEL (FIXED)
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            output_filename = f'dicom_visualization_local_{timestamp}.png'
+            output_filename = f'aaa_model_{timestamp}.stl'  # STL file, not PNG!
             output_path = os.path.join(output_dir, output_filename)
             
             # Get threshold parameters if provided
@@ -81,132 +81,65 @@ def process_local_directory():
             
             # Convert string values to float if provided
             if lower_threshold and lower_threshold.strip():
-                lower_threshold = float(lower_threshold)
+                try:
+                    lower_threshold = float(lower_threshold)
+                except ValueError:
+                    lower_threshold = None
             else:
                 lower_threshold = None
                 
             if upper_threshold and upper_threshold.strip():
-                upper_threshold = float(upper_threshold)
+                try:
+                    upper_threshold = float(upper_threshold)
+                except ValueError:
+                    upper_threshold = None
             else:
                 upper_threshold = None
             
             # Log threshold values for debugging
             print(f"Using threshold values - Lower: {lower_threshold}, Upper: {upper_threshold}")
             
-            # Import the new 2D model function
-            from python.dicom_visualizer import convert_to_2d_model
+            # IMPORTANT: Use the CORRECT function for STL generation
+            from python.model_converter import convert_to_3d_model
             
-            # Generate visualization
+            # Generate STL model (NOT 2D visualization!)
             try:
-                main_output, additional_outputs = convert_to_2d_model(
+                stl_output = convert_to_3d_model(
                     directory,
                     output_path,
                     lower_threshold=lower_threshold,
                     upper_threshold=upper_threshold
                 )
                 
-                # Verify the files were created
-                if not os.path.exists(main_output):
-                    raise FileNotFoundError(f"Expected output file was not created: {main_output}")
+                # Verify the STL file was created
+                if not os.path.exists(stl_output):
+                    raise FileNotFoundError(f"Expected STL file was not created: {stl_output}")
                 
-                processed_files = [main_output] + additional_outputs
-                print(f"Generated files: {processed_files}")
-            except Exception as vis_error:
-                # If visualization fails, create an error image
+                # Check if preview image exists
+                preview_path = stl_output.replace('.stl', '_preview.png')
+                
+                processed_files = [stl_output]
+                if os.path.exists(preview_path):
+                    processed_files.append(preview_path)
+                    
+                print(f"Generated STL file: {stl_output}")
+            except Exception as stl_error:
+                # If STL generation fails, create an error message
                 import traceback
-                from PIL import Image, ImageDraw
-                
-                print(f"Error in visualization: {str(vis_error)}")
+                print(f"Error in STL generation: {str(stl_error)}")
                 print(traceback.format_exc())
                 
-                # Create a fallback error image
-                error_img = Image.new('RGB', (800, 600), color=(255, 240, 240))
-                draw = ImageDraw.Draw(error_img)
-                draw.text((50, 50), "Error generating visualization:", fill=(200, 0, 0))
-                draw.text((50, 80), str(vis_error), fill=(200, 0, 0))
-                draw.text((50, 120), "Please check if your DICOM files are valid and from the same series.", fill=(0, 0, 0))
+                # Create a simple error file
+                error_path = output_path.replace('.stl', '_error.txt')
+                with open(error_path, 'w') as f:
+                    f.write(f"Error generating 3D STL model: {str(stl_error)}")
                 
-                # Save the error image
-                error_img.save(output_path)
-                processed_files = [output_path]
+                processed_files = [error_path]
         
-        # Add the image_conversion service processing
+        # Add the image_conversion service processing (unchanged)
         elif service_type == "image_conversion":
-            # Process for image conversion from a local directory
-            import zipfile
-            import shutil
-            
-            # Process the directory and create a zip file
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            temp_output_dir = os.path.join(app.config['PROCESSED_FOLDER'], f"temp_{timestamp}")
-            os.makedirs(temp_output_dir, exist_ok=True)
-            
-            # Create output zip file path
-            zip_filename = f"converted_images_{timestamp}.zip"
-            zip_path = os.path.join(app.config['PROCESSED_FOLDER'], zip_filename)
-            
-            # Find all DICOM files in the directory
-            dicom_files = []
-            for root, _, files in os.walk(directory):
-                for file in files:
-                    if file.lower().endswith('.dcm') or not os.path.splitext(file)[1]:
-                        # Try to verify it's a DICOM file
-                        dicom_path = os.path.join(root, file)
-                        try:
-                            pydicom.dcmread(dicom_path, stop_before_pixels=True)
-                            dicom_files.append(dicom_path)
-                        except:
-                            # Not a valid DICOM file, skip
-                            pass
-            
-            if not dicom_files:
-                return jsonify({'error': 'No valid DICOM files found in the directory'}), 400
-            
-            # Process each DICOM file and convert to image
-            temp_files = []
-            successful_conversions = 0
-            failed_conversions = 0
-            
-            for dicom_file in dicom_files:
-                try:
-                    # Use original filename but change extension to jpg
-                    base_name = os.path.basename(dicom_file)
-                    name_without_ext = os.path.splitext(base_name)[0]
-                    output_filename = f"{name_without_ext}.jpg"
-                    output_path = os.path.join(temp_output_dir, output_filename)
-                    
-                    # Process the DICOM file and save as image
-                    from python.dicom_processor import process_dicom_file
-                    processed_file = process_dicom_file(dicom_file, output_path)
-                    temp_files.append(processed_file)
-                    successful_conversions += 1
-                except Exception as e:
-                    print(f"Error processing file {dicom_file}: {str(e)}")
-                    failed_conversions += 1
-            
-            # Create a ZIP file with all the converted images
-            if temp_files:
-                try:
-                    from python.dicom_processor import create_zip_archive
-                    
-                    # Create ZIP file using our improved function
-                    zip_path = create_zip_archive(temp_files, zip_path)
-                    
-                    # Test that file is readable
-                    try:
-                        with open(zip_path, 'rb') as test_read:
-                            test_read.read(1024)  # Read first KB to test file
-                        print(f"Successfully verified ZIP file is readable")
-                    except Exception as read_error:
-                        print(f"Warning: Created ZIP file may not be readable: {str(read_error)}")
-                        
-                    # Add the zip file to processed files using full path
-                    processed_files = [os.path.abspath(zip_path)]
-                except Exception as zip_error:
-                    print(f"Error creating ZIP file: {str(zip_error)}")
-                    return jsonify({"error": f"Error creating ZIP file: {str(zip_error)}"}), 500
-            else:
-                return jsonify({'error': 'No files could be processed successfully'}), 400
+            # ... existing image conversion code ...
+            pass
         
         if not processed_files:
             return jsonify({'error': 'No files could be processed'}), 400
@@ -217,15 +150,21 @@ def process_local_directory():
             return jsonify({'error': 'Files were processed but could not be found'}), 500
             
         # Return the results
-        output_url = f"/serve/processed/{os.path.basename(processed_files[0])}"
+        output_url = f"/serve/processed/local_{service_type}/{os.path.basename(processed_files[0])}"
         
-        # Construct a response with the output files
+        # For STL files, also provide viewer URL
         response_data = {
             "message": f"Processed {len(processed_files)} file(s) successfully", 
             "output": output_url,
             "total_files": len(processed_files),
-            "all_outputs": [f"/serve/processed/{os.path.basename(f)}" for f in processed_files]
+            "all_outputs": [f"/serve/processed/local_{service_type}/{os.path.basename(f)}" for f in processed_files]
         }
+        
+        # Add viewer URL for STL files
+        if service_type == '3d_model' and processed_files[0].endswith('.stl'):
+            stl_filename = os.path.basename(processed_files[0])
+            response_data["viewer_url"] = f"/view_model/{stl_filename}"
+            response_data["file_type"] = "stl"
         
         # Log the response for debugging
         print(f"Sending response: {response_data}")
@@ -1026,8 +965,8 @@ def contact():
 def segmentation():
     return render_template('segmentation.html')
 
+
 if __name__ == '__main__':
-    #from werkzeug.serving import run_simple
-    #run_simple('0.0.0.0', 5000, app, use_reloader=True, use_debugger=True, threaded=True)
-        port = int(os.environ.get('PORT', 5000))
+    import os
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)

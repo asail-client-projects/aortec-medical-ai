@@ -391,17 +391,27 @@ function handleFormSubmit(event) {
     const formData = new FormData(form);
     
     // For 3D model service, verify it's a folder upload
-    if (serviceType === "3d_model") {
-        const fileInput = form.querySelector('input[type="file"]');
-        if (!fileInput.hasAttribute('webkitdirectory') && fileInput.files.length < 5) {
-            resultContainer.innerHTML = `
-                <div class="error-container">
-                    <p class="error">Error: Visualization generation requires a folder with a complete series of DICOM files.</p>
-                    <p>Please select a folder containing DICOM files rather than individual files.</p>
+    if (serviceType === "model3D" && data.output.endsWith('.stl')) {
+        resultHTML += `
+            <div class="model-info">
+                <h4>3D Model Generated Successfully</h4>
+                <p>Your DICOM series has been converted to a 3D STL model.</p>
+                
+                <div class="model-actions">
+                    <a href="${data.output}" class="download-btn" download>
+                        <i class="fas fa-download"></i> Download STL Model
+                    </a>
+                    <a href="/view_model/${data.output.split('/').pop()}" class="download-btn" target="_blank">
+                        <i class="fas fa-eye"></i> View 3D Model
+                    </a>
                 </div>
-            `;
-            return;
-        }
+                
+                <div class="model-stats">
+                    <p><strong>File Format:</strong> STL (3D Printable)</p>
+                    <p><strong>Compatible with:</strong> 3D viewers, CAD software, 3D printers</p>
+                </div>
+            </div>
+        `;
     }
     
     // Show loading message with progress animation
@@ -512,7 +522,7 @@ function handleLocalFormSubmit(event) {
         <div class="processing-indicator">
             <div class="loading-spinner"></div>
             <p class="loading">Processing local directory...</p>
-            <p>This may take several minutes for large datasets.</p>
+            <p>Generating 3D STL model from DICOM series...</p>
         </div>
     `;
     
@@ -568,71 +578,38 @@ function handleLocalFormSubmit(event) {
                         <ul>
                             <li>Verify the directory path is correct and accessible by the server</li>
                             <li>Check if your DICOM files are valid</li>
-                            <li>Make sure the directory contains supported file formats</li>
+                            <li>Make sure the directory contains a complete DICOM series</li>
+                            <li>Try adjusting threshold values if model generation fails</li>
                         </ul>
                     </details>
                 </div>
             `;
-        } else {
-            // Check if output exists
-            if (!data.output) {
-                resultContainer.innerHTML = `
-                    <div class="error-container">
-                        <p class="error">Error: Invalid response from server</p>
-                        <p>The server returned a success message but no processed files.</p>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Check if this is image conversion service and there's a ZIP file in the output
-            if (serviceType === "image_conversion" && data.output.toLowerCase().includes('.zip')) {
-                // Display simplified result for image conversion with ZIP
-                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-                resultHTML += `
-                    <div class="result-container">
-                        <div class="conversion-summary">
-                            <h4>Conversion Complete</h4>
-                            <p>Successfully converted ${data.total_files || 'multiple'} DICOM files to standard image format.</p>
-                            <p>All images have been packaged into a single ZIP file for easy download.</p>
-                        </div>
-                        <div class="download-section">
-                            <a href="${data.output}" class="download-btn" download>Download All Images (ZIP)</a>
-                        </div>
-                    </div>
-                `;
-                resultContainer.innerHTML = resultHTML;
-            } else {
-                // Regular display for other services
-                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-                
-                // Main result display
-                resultHTML += `
-                    <div class="result-image">
-                        <img src="${data.output}" alt="Processed result">
-                    </div>
-                    <a href="${data.output}" class="download-btn" download>Download Result</a>
-                `;
-                
-                // If there are multiple files, show them all
-                if (data.all_outputs && data.all_outputs.length > 1) {
-                    resultHTML += `<h4>All Processed Files (${data.all_outputs.length}):</h4><div class="all-results">`;
-                    
-                    data.all_outputs.forEach(output => {
-                        resultHTML += `
-                            <div class="result-thumbnail">
-                                <img src="${output}" alt="Processed result">
-                                <a href="${output}" download>Download</a>
-                            </div>
-                        `;
-                    });
-                    
-                    resultHTML += `</div>`;
-                }
-                
-                resultContainer.innerHTML = resultHTML;
-            }
+            return;
+        }
+        
+        // Check if output exists
+        if (!data.output) {
+            resultContainer.innerHTML = `
+                <div class="error-container">
+                    <p class="error">Error: Invalid response from server</p>
+                    <p>The server returned a success message but no processed files.</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            return;
+        }
+        
+        // Handle STL model results
+        if (serviceType === "3d_model" && data.file_type === "stl") {
+            handleSTLModelResult(data, resultContainer);
+        }
+        // Handle image conversion results with ZIP
+        else if (serviceType === "image_conversion" && data.output.toLowerCase().includes('.zip')) {
+            handleImageConversionResult(data, resultContainer);
+        }
+        // Handle other results
+        else {
+            handleGenericResult(data, resultContainer);
         }
     })
     .catch(error => {
@@ -890,4 +867,131 @@ function handleLocalFormSubmit(event) {
             `;
         });
     }
+}
+
+function handleSTLModelResult(data, resultContainer) {
+    // Display STL model results
+    let resultHTML = `<p class="success">${data.message || 'STL model generated successfully!'}</p>`;
+    
+    resultHTML += `
+        <div class="stl-model-container">
+            <div class="model-summary">
+                <h4>3D STL Model Generated Successfully</h4>
+                <p>Your DICOM series has been converted to a downloadable 3D STL model.</p>
+                
+                <div class="model-info">
+                    <div class="info-item">
+                        <strong>File Format:</strong> STL (Standard Tessellation Language)
+                    </div>
+                    <div class="info-item">
+                        <strong>Compatible with:</strong> 3D viewers, CAD software, 3D printers
+                    </div>
+                    <div class="info-item">
+                        <strong>Use cases:</strong> Medical visualization, 3D printing, research
+                    </div>
+                </div>
+            </div>
+            
+            <div class="model-actions">
+                <a href="${data.output}" class="download-btn primary" download>
+                    <i class="fas fa-download"></i> Download STL Model
+                </a>
+    `;
+    
+    // Add viewer button if viewer URL is available
+    if (data.viewer_url) {
+        resultHTML += `
+                <a href="${data.viewer_url}" class="download-btn secondary" target="_blank">
+                    <i class="fas fa-eye"></i> View 3D Model
+                </a>
+        `;
+    }
+    
+    resultHTML += `
+            </div>
+        </div>
+    `;
+    
+    // Add preview image if available
+    const previewUrl = data.output.replace('.stl', '_preview.png');
+    resultHTML += `
+        <div class="model-preview">
+            <h4>Model Preview</h4>
+            <img src="${previewUrl}" alt="3D Model Preview" 
+                 style="max-width: 100%; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                 onerror="this.style.display='none';">
+        </div>
+    `;
+    
+    // Add usage instructions
+    resultHTML += `
+        <div class="usage-instructions">
+            <h4>How to Use Your STL Model</h4>
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <strong>3D Viewing:</strong> Use the "View 3D Model" button above or import into any STL viewer
+                </div>
+                <div class="instruction-item">
+                    <strong>3D Printing:</strong> Import the STL file into your 3D printer software (Cura, PrusaSlicer, etc.)
+                </div>
+                <div class="instruction-item">
+                    <strong>CAD Software:</strong> Open in Blender, MeshLab, or other 3D modeling applications
+                </div>
+                <div class="instruction-item">
+                    <strong>Medical Analysis:</strong> Use in medical visualization software for further analysis
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+function handleImageConversionResult(data, resultContainer) {
+    // Display simplified result for image conversion with ZIP
+    let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+    resultHTML += `
+        <div class="result-container">
+            <div class="conversion-summary">
+                <h4>Conversion Complete</h4>
+                <p>Successfully converted ${data.total_files || 'multiple'} DICOM files to standard image format.</p>
+                <p>All images have been packaged into a single ZIP file for easy download.</p>
+            </div>
+            <div class="download-section">
+                <a href="${data.output}" class="download-btn" download>Download All Images (ZIP)</a>
+            </div>
+        </div>
+    `;
+    resultContainer.innerHTML = resultHTML;
+}
+
+function handleGenericResult(data, resultContainer) {
+    // Regular display for other services
+    let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+    
+    // Main result display
+    resultHTML += `
+        <div class="result-image">
+            <img src="${data.output}" alt="Processed result">
+        </div>
+        <a href="${data.output}" class="download-btn" download>Download Result</a>
+    `;
+    
+    // If there are multiple files, show them all
+    if (data.all_outputs && data.all_outputs.length > 1) {
+        resultHTML += `<h4>All Processed Files (${data.all_outputs.length}):</h4><div class="all-results">`;
+        
+        data.all_outputs.forEach(output => {
+            resultHTML += `
+                <div class="result-thumbnail">
+                    <img src="${output}" alt="Processed result">
+                    <a href="${output}" download>Download</a>
+                </div>
+            `;
+        });
+        
+        resultHTML += `</div>`;
+    }
+    
+    resultContainer.innerHTML = resultHTML;
 }

@@ -1,0 +1,2 @@
+Patient ID,Axial Diameter (mm),ILT Volume (mL),Peak Wall Stress (kPa),Blood Pressure (mmHg),Smoking History,Age,Gender,Smoking_Numeric,Gender_Numeric,Current Risk (%),Growth Rate (mm/year),Diameter at 1 Year (mm),Diameter at 5 Years (mm),Risk at 1 Year (%),Risk at 5 Years (%),Current Risk Category,Risk Category at 1 Year,Risk Category at 5 Years
+P015,51.5,60,170,150,Yes,75,M,1,1,87.0,0.8114531636238098,52.31145316362381,55.55726581811905,87.0,92.0,Very High,Very High,Very High

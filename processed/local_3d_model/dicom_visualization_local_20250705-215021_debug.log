@@ -1,0 +1,28 @@
+Debug log for processing C:\Users\asail\Downloads\3D model
+VTK version: 9.3.1
+Python version: 3.12.6 (tags/v3.12.6:a4a2d2b, Sep  6 2024, 20:11:23) [MSC v.1940 64 bit (AMD64)]
+
+Attempting to load DICOM series with SimpleITK...
+Found 36 DICOM files in the series
+Successfully loaded DICOM series with SimpleITK: (36, 512, 512, 3)
+Detected RGB DICOM data (SimpleITK), using first channel
+Processing volume with shape: (36, 512, 512)
+Volume data statistics: min=0.0, max=255.0, mean=8.476093292236328
+Using thresholds - Lower: 100, Upper: 300
+Creating binary mask...
+Created segmentation mask with 392580 positive voxels
+Starting VTK surface generation...
+Binary mask shape: (36, 512, 512)
+Flattened mask with 9437184 elements
+Created VTK data array
+Created VTK image with dimensions: 512x512x36
+Running marching cubes algorithm...
+Marching cubes generated surface with 1493465 points
+Post-processing the surface...
+Extracted largest connected component
+Smoothed the surface
+Computed surface normals
+Setting up rendering pipeline...
+Rendering the scene...
+Saving output to processed/local_3d_model\dicom_visualization_local_20250705-215021.png...
+Successfully saved 3D visualization to: processed/local_3d_model\dicom_visualization_local_20250705-215021.png
