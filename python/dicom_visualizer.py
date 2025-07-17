@@ -505,6 +505,78 @@ class WebDicomViewer:
             'folder_path': self.dicom_folder
         }
 
+
+# Add this function to the END of your dicom_visualizer.py file
+
+def convert_to_2d_model(dicom_folder, output_path, lower_threshold=None, upper_threshold=None):
+    """
+    Convert DICOM folder to 2D model visualization.
+    This function creates a 2D visualization from DICOM files using the WebDicomViewer class.
+    
+    Args:
+        dicom_folder: Path to folder containing DICOM files
+        output_path: Path to save the output image
+        lower_threshold: Lower threshold for processing (not used in viewer)
+        upper_threshold: Upper threshold for processing (not used in viewer)
+        
+    Returns:
+        tuple: (main_output_path, [additional_outputs])
+    """
+    try:
+        # Create the web viewer
+        viewer = WebDicomViewer(dicom_folder)
+        
+        # Generate the main viewer image (middle slice)
+        middle_index = len(viewer.image_paths) // 2
+        main_output = viewer.create_viewer_image_web(middle_index, output_path)
+        
+        # Generate additional outputs (optional)
+        additional_outputs = []
+        
+        # Create a multi-view image
+        multi_output = output_path.replace('.png', '_multi.png')
+        try:
+            # Create a simple grid of multiple views
+            import matplotlib.pyplot as plt
+            import numpy as np
+            
+            fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+            fig.patch.set_facecolor('black')
+            
+            indices = np.linspace(0, len(viewer.image_paths) - 1, 6, dtype=int)
+            
+            for i, idx in enumerate(indices):
+                row = i // 3
+                col = i % 3
+                
+                dicom_data = viewer.get_image_data(idx)
+                if dicom_data:
+                    img = dicom_data['image']
+                    axes[row, col].imshow(img, cmap='gray')
+                    axes[row, col].set_title(f"Slice {idx + 1}", color='white')
+                    axes[row, col].axis('off')
+            
+            plt.tight_layout()
+            plt.savefig(multi_output, dpi=150, bbox_inches='tight', 
+                       facecolor='black', edgecolor='none')
+            plt.close()
+            
+            additional_outputs.append(multi_output)
+        except Exception as e:
+            print(f"Error creating multi-view: {str(e)}")
+        
+        return main_output, additional_outputs
+        
+    except Exception as e:
+        print(f"Error in convert_to_2d_model: {str(e)}")
+        raise
+
+def create_2d_model_from_dicom_folder(dicom_folder, output_path, lower_threshold=None, upper_threshold=None):
+    """
+    Alternative function name that might be expected by some parts of the code.
+    """
+    return convert_to_2d_model(dicom_folder, output_path, lower_threshold, upper_threshold)[0]
+
 # Integration function for model_converter.py
 def create_dicom_web_viewer(dicom_folder, output_path):
     """
