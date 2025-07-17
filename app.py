@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from python.dicom_processor import process_dicom_file, read_dicom_folder, extract_zip, process_zip_file
 from python.segmentation import segment_dicom_file, apply_segmentation, process_dicom_folder_for_segmentation
-from python.model_converter import  convert_to_3d_model, generate_html_viewer
+from python.model_converter import process_dicom_folder_for_viewer, generate_html_viewer
 from python.growth_rate import predict_growth_rate_from_excel, predict_growth_rate_from_input
 from python.rupture_risk import predict_rupture_risk_from_excel, predict_rupture_risk_from_input
 import glob
@@ -43,17 +43,94 @@ def allowed_file(filename):
     if '.' not in filename:  # No extension
         return True
     return filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def process_dicom_folder_for_image_conversion(directory, output_dir):
+    """
+    Process DICOM folder for image conversion.
+    """
+    from python.dicom_processor import apply_segmentation
+    return apply_segmentation(directory, output_dir)
+
+
+@app.route('/service/dicom_viewer', methods=['POST'])
+def process_dicom_viewer():
+    """
+    Process uploaded DICOM files and create an interactive viewer.
+    This uses your 3dModel.py logic but for web browsers.
+    """
+    try:
+        if 'dicom_file' not in request.files:
+            return jsonify({'error': 'No files uploaded'})
         
+        files = request.files.getlist('dicom_file')
+        
+        if len(files) == 0 or files[0].filename == '':
+            return jsonify({'error': 'No files selected'})
+        
+        # Check if enough files are uploaded for a proper viewer
+        if len(files) < 3:
+            return jsonify({'error': 'For optimal viewing, please upload at least 3 DICOM files from the same series.'})
+        
+        # Create timestamp for unique folder
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        upload_dir = os.path.join(UPLOAD_FOLDER, f'viewer_{timestamp}')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save uploaded files
+        for file in files:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(upload_dir, filename)
+            file.save(file_path)
+        
+        # Define output path for HTML viewer
+        output_filename = f'dicom_viewer_{timestamp}.html'
+        output_path = os.path.join(PROCESSED_FOLDER, output_filename)
+        
+        # Process uploaded files to generate interactive viewer
+        try:
+            # Import the web-compatible DICOM viewer
+            from python.dicom_web_viewer import create_dicom_web_viewer
+            
+            # Generate DICOM viewer (similar to your 3dModel.py but for web)
+            result = create_dicom_web_viewer(upload_dir, output_path)
+            
+            # Prepare URLs for response
+            viewer_url = f"/serve/processed/{output_filename}"
+            preview_url = f"/serve/processed/{os.path.basename(result['preview_image'])}"
+            
+            # Prepare response
+            return jsonify({
+                'message': 'DICOM viewer generated successfully!',
+                'output': preview_url,  # Preview image for immediate display
+                'viewer_url': viewer_url,  # Interactive viewer
+                'metadata': result['metadata'],
+                'type': 'dicom_viewer'
+            })
+            
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            app.logger.error(f"Error processing DICOM viewer: {str(e)}\n{error_details}")
+            return jsonify({'error': f"Error generating DICOM viewer: {str(e)}"})
+    
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        app.logger.error(f"Server error in DICOM viewer route: {str(e)}\n{error_details}")
+        return jsonify({'error': f"Server error: {str(e)}"})
 
 @app.route('/process_local_directory', methods=['POST'])
 def process_local_directory():
-    """Process DICOM files from a local directory on the server."""
+    """Updated to support DICOM viewer mode."""
     directory = request.form.get('directory')
     service_type = request.form.get('service_type')
+    viewer_mode = request.form.get('viewer_mode', 'false').lower() == 'true'  # New parameter
     
     # Log request details for debugging
     print(f"Processing local directory: {directory}")
     print(f"Service type: {service_type}")
+    print(f"Viewer mode: {viewer_mode}")
     print(f"Form data: {request.form}")
     
     if not directory or not os.path.exists(directory):
@@ -70,75 +147,117 @@ def process_local_directory():
             processed_files = process_dicom_folder_for_segmentation(directory, output_dir)
             
         elif service_type == '3d_model':
-            # Process for TRUE 3D STL MODEL (FIXED)
+            # Process for 3D model OR DICOM viewer
             timestamp = time.strftime("%Y%m%d-%H%M%S")
-            output_filename = f'aaa_model_{timestamp}.stl'  # STL file, not PNG!
-            output_path = os.path.join(output_dir, output_filename)
             
-            # Get threshold parameters if provided
-            lower_threshold = request.form.get('lower_threshold', None)
-            upper_threshold = request.form.get('upper_threshold', None)
-            
-            # Convert string values to float if provided
-            if lower_threshold and lower_threshold.strip():
+            if viewer_mode:
+                # Create DICOM viewer (like your 3dModel.py)
+                output_filename = f'dicom_viewer_{timestamp}.html'
+                output_path = os.path.join(output_dir, output_filename)
+                
+                # Import and use the web-compatible DICOM viewer
+                from python.dicom_web_viewer import create_dicom_web_viewer
+                
                 try:
-                    lower_threshold = float(lower_threshold)
-                except ValueError:
-                    lower_threshold = None
-            else:
-                lower_threshold = None
-                
-            if upper_threshold and upper_threshold.strip():
-                try:
-                    upper_threshold = float(upper_threshold)
-                except ValueError:
-                    upper_threshold = None
-            else:
-                upper_threshold = None
-            
-            # Log threshold values for debugging
-            print(f"Using threshold values - Lower: {lower_threshold}, Upper: {upper_threshold}")
-            
-            # IMPORTANT: Use the CORRECT function for STL generation
-            from python.model_converter import convert_to_3d_model
-            
-            # Generate STL model (NOT 2D visualization!)
-            try:
-                stl_output = convert_to_3d_model(
-                    directory,
-                    output_path,
-                    lower_threshold=lower_threshold,
-                    upper_threshold=upper_threshold
-                )
-                
-                # Verify the STL file was created
-                if not os.path.exists(stl_output):
-                    raise FileNotFoundError(f"Expected STL file was not created: {stl_output}")
-                
-                # Check if preview image exists
-                preview_path = stl_output.replace('.stl', '_preview.png')
-                
-                processed_files = [stl_output]
-                if os.path.exists(preview_path):
-                    processed_files.append(preview_path)
+                    result = create_dicom_web_viewer(directory, output_path)
                     
-                print(f"Generated STL file: {stl_output}")
-            except Exception as stl_error:
-                # If STL generation fails, create an error message
-                import traceback
-                print(f"Error in STL generation: {str(stl_error)}")
-                print(traceback.format_exc())
+                    # Prepare response for DICOM viewer
+                    viewer_url = f"/serve/processed/local_{service_type}/{output_filename}"
+                    preview_url = f"/serve/processed/local_{service_type}/{os.path.basename(result['preview_image'])}"
+                    
+                    return jsonify({
+                        "message": f"DICOM viewer created successfully with {result['metadata']['total_images']} images", 
+                        "output": preview_url,  # Preview image for immediate display
+                        "viewer_url": viewer_url,  # Interactive viewer
+                        "total_files": result['metadata']['total_images'],
+                        "file_type": "dicom_viewer",
+                        "metadata": result['metadata']
+                    }), 200
+                    
+                except Exception as viewer_error:
+                    print(f"Error creating DICOM viewer: {str(viewer_error)}")
+                    import traceback
+                    print(traceback.format_exc())
+                    return jsonify({"error": f"Error creating DICOM viewer: {str(viewer_error)}"}), 500
+            else:
+                # Create STL model (original functionality)
+                output_filename = f'aaa_model_{timestamp}.stl'
+                output_path = os.path.join(output_dir, output_filename)
                 
-                # Create a simple error file
-                error_path = output_path.replace('.stl', '_error.txt')
-                with open(error_path, 'w') as f:
-                    f.write(f"Error generating 3D STL model: {str(stl_error)}")
+                # Get threshold parameters if provided
+                lower_threshold = request.form.get('lower_threshold', None)
+                upper_threshold = request.form.get('upper_threshold', None)
                 
-                processed_files = [error_path]
+                # Convert string values to float if provided
+                if lower_threshold and lower_threshold.strip():
+                    try:
+                        lower_threshold = float(lower_threshold)
+                    except ValueError:
+                        lower_threshold = None
+                else:
+                    lower_threshold = None
+                    
+                if upper_threshold and upper_threshold.strip():
+                    try:
+                        upper_threshold = float(upper_threshold)
+                    except ValueError:
+                        upper_threshold = None
+                else:
+                    upper_threshold = None
+                
+                # Log threshold values for debugging
+                print(f"Using threshold values - Lower: {lower_threshold}, Upper: {upper_threshold}")
+                
+                # Generate STL model (original functionality)
+                try:
+                    from python.model_converter import convert_to_3d_model
+                    
+                    stl_output = convert_to_3d_model(
+                        directory,
+                        output_path,
+                        lower_threshold=lower_threshold,
+                        upper_threshold=upper_threshold,
+                        viewer_mode=False  # STL mode
+                    )
+                    
+                    # Verify the STL file was created
+                    if not os.path.exists(stl_output):
+                        raise FileNotFoundError(f"Expected STL file was not created: {stl_output}")
+                    
+                    # Check if preview image exists
+                    preview_path = stl_output.replace('.stl', '_preview.png')
+                    
+                    processed_files = [stl_output]
+                    if os.path.exists(preview_path):
+                        processed_files.append(preview_path)
+                        
+                    print(f"Generated STL file: {stl_output}")
+                    
+                    # Return STL response
+                    output_url = f"/serve/processed/local_{service_type}/{os.path.basename(stl_output)}"
+                    
+                    response_data = {
+                        "message": f"STL model generated successfully", 
+                        "output": output_url,
+                        "total_files": len(processed_files),
+                        "all_outputs": [f"/serve/processed/local_{service_type}/{os.path.basename(f)}" for f in processed_files],
+                        "file_type": "stl"
+                    }
+                    
+                    # Add viewer URL for STL files
+                    stl_filename = os.path.basename(stl_output)
+                    response_data["viewer_url"] = f"/view_model/{stl_filename}"
+                    
+                    return jsonify(response_data), 200
+                    
+                except Exception as stl_error:
+                    print(f"Error in STL generation: {str(stl_error)}")
+                    import traceback
+                    print(traceback.format_exc())
+                    return jsonify({"error": f"Error generating STL model: {str(stl_error)}"}), 500
         
-        # Add the image_conversion service processing (unchanged)
         elif service_type == "image_conversion":
-            # ... existing image conversion code ...
+            # Existing image conversion code remains unchanged
             pass
         
         if not processed_files:
@@ -149,25 +268,15 @@ def process_local_directory():
         if not processed_files:
             return jsonify({'error': 'Files were processed but could not be found'}), 500
             
-        # Return the results
+        # Return the results for non-3d_model services
         output_url = f"/serve/processed/local_{service_type}/{os.path.basename(processed_files[0])}"
         
-        # For STL files, also provide viewer URL
         response_data = {
             "message": f"Processed {len(processed_files)} file(s) successfully", 
             "output": output_url,
             "total_files": len(processed_files),
             "all_outputs": [f"/serve/processed/local_{service_type}/{os.path.basename(f)}" for f in processed_files]
         }
-        
-        # Add viewer URL for STL files
-        if service_type == '3d_model' and processed_files[0].endswith('.stl'):
-            stl_filename = os.path.basename(processed_files[0])
-            response_data["viewer_url"] = f"/view_model/{stl_filename}"
-            response_data["file_type"] = "stl"
-        
-        # Log the response for debugging
-        print(f"Sending response: {response_data}")
         
         return jsonify(response_data), 200
         
@@ -177,82 +286,46 @@ def process_local_directory():
         print(f"Error in local processing: {str(e)}\n{error_details}")
         return jsonify({"error": str(e)}), 500
 
-
-@app.route('/process_local_directory_images', methods=['POST'])
-def process_local_directory_images():
-    """Process DICOM files from a local directory and return image paths for client-side ZIP creation."""
-    directory = request.form.get('directory')
+@app.route('/view_dicom/<path:viewer_name>')
+def view_dicom_viewer(viewer_name):
+    """
+    Serve the interactive DICOM viewer HTML file.
+    This replaces the tkinter GUI with a web interface.
+    """
+    # Ensure viewer name is sanitized
+    viewer_name = secure_filename(viewer_name)
     
-    # Log request details for debugging
-    print(f"Processing local directory for client-side ZIP: {directory}")
+    # Try to find the viewer in various locations
+    possible_paths = [
+        os.path.join(PROCESSED_FOLDER, viewer_name),
+        os.path.join(PROCESSED_FOLDER, 'local_3d_model', viewer_name),
+        os.path.join(PROCESSED_FOLDER, f"{viewer_name}.html"),
+        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{viewer_name}.html"),
+    ]
     
-    if not directory or not os.path.exists(directory):
-        return jsonify({'error': f'Directory not found: {directory}'}), 404
-        
+    # Add .html extension and check
+    if not viewer_name.lower().endswith('.html'):
+        html_path = f"{viewer_name}.html"
+        possible_paths.append(os.path.join(PROCESSED_FOLDER, html_path))
+        possible_paths.append(os.path.join(PROCESSED_FOLDER, 'local_3d_model', html_path))
+    
+    viewer_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            viewer_path = path
+            break
+    
+    # Check if file exists
+    if not viewer_path:
+        return f"DICOM viewer not found: {viewer_name}", 404
+    
+    # Read and serve the HTML content
     try:
-        # Create timestamp for unique folder
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        temp_output_dir = os.path.join(app.config['PROCESSED_FOLDER'], f"temp_{timestamp}")
-        os.makedirs(temp_output_dir, exist_ok=True)
-        
-        # Find all DICOM files in the directory
-        dicom_files = []
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.lower().endswith('.dcm') or not os.path.splitext(file)[1]:
-                    # Try to verify it's a DICOM file
-                    dicom_path = os.path.join(root, file)
-                    try:
-                        pydicom.dcmread(dicom_path, stop_before_pixels=True)
-                        dicom_files.append(dicom_path)
-                    except:
-                        # Not a valid DICOM file, skip
-                        pass
-        
-        if not dicom_files:
-            return jsonify({'error': 'No valid DICOM files found in the directory'}), 400
-        
-        # Process each DICOM file and convert to image
-        processed_files = []
-        successful_conversions = 0
-        failed_conversions = 0
-        
-        for dicom_file in dicom_files:
-            try:
-                # Use original filename but change extension to jpg
-                base_name = os.path.basename(dicom_file)
-                name_without_ext = os.path.splitext(base_name)[0]
-                output_filename = f"{name_without_ext}.jpg"
-                output_path = os.path.join(temp_output_dir, output_filename)
-                
-                # Process the DICOM file and save as image
-                from python.dicom_processor import process_dicom_file
-                processed_file = process_dicom_file(dicom_file, output_path)
-                processed_files.append(processed_file)
-                successful_conversions += 1
-            except Exception as e:
-                print(f"Error processing file {dicom_file}: {str(e)}")
-                failed_conversions += 1
-        
-        # Return paths to all processed images for client-side zip creation
-        if not processed_files:
-            return jsonify({'error': 'No files could be processed successfully'}), 400
-        
-        # Create URLs for each image
-        image_urls = [f"/serve/processed/temp_{timestamp}/{os.path.basename(f)}" for f in processed_files]
-        
-        return jsonify({
-            "message": f"Processed {len(processed_files)} file(s) successfully",
-            "image_paths": image_urls,
-            "total_files": len(processed_files)
-        }), 200
-        
+        with open(viewer_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return html_content
     except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Error in local processing: {str(e)}\n{error_details}")
-        return jsonify({"error": str(e)}), 500
-
+        return f"Error loading DICOM viewer: {str(e)}", 500
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -326,16 +399,28 @@ def test_file(filepath):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    """Custom 404 page."""
-    return render_template('404.html'), 404
+    """Custom 404 page with fallback."""
+    try:
+        return render_template('404.html'), 404
+    except:
+        # Fallback if 404.html doesn't exist
+        return '''
+        <html>
+        <body style="background:#1a1a1a;color:white;font-family:Arial;text-align:center;padding:100px;">
+            <h1 style="color:#f9a826;">404 - Page Not Found</h1>
+            <p>The requested resource was not found.</p>
+            <a href="/" style="color:#f9a826;">Return to Home</a>
+        </body>
+        </html>
+        ''', 404
 
 
 # Add these routes to your Flask application
 @app.route('/service/3d_model', methods=['POST'])
 def process_3d_model():
     """
-    Process uploaded DICOM files and convert them to visualizations.
-    This now creates a 2D visualization rather than a 3D STL model.
+    Process uploaded DICOM files and create DICOM viewer visualizations.
+    This now creates a DICOM viewer instead of STL models.
     """
     try:
         if 'dicom_file' not in request.files:
@@ -346,13 +431,13 @@ def process_3d_model():
         if len(files) == 0 or files[0].filename == '':
             return jsonify({'error': 'No files selected'})
         
-        # Check if enough files are uploaded for a proper visualization
-        if len(files) < 5:
-            return jsonify({'error': 'For optimal visualization, a complete series of DICOM files is required (typically 5+ files). Please select a folder with more DICOM files.'})
+        # Check if enough files are uploaded for a proper viewer
+        if len(files) < 3:
+            return jsonify({'error': 'For optimal viewing, at least 3 DICOM files are recommended. Please select a folder with more DICOM files.'})
         
         # Create timestamp for unique folder
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        upload_dir = os.path.join(UPLOAD_FOLDER, f'model_{timestamp}')
+        upload_dir = os.path.join(UPLOAD_FOLDER, f'dicom_viewer_{timestamp}')
         os.makedirs(upload_dir, exist_ok=True)
         
         # Save uploaded files
@@ -361,71 +446,55 @@ def process_3d_model():
             file_path = os.path.join(upload_dir, filename)
             file.save(file_path)
         
-        # Define output path
-        output_filename = f'dicom_visualization_{timestamp}.png'
-        output_path = os.path.join(PROCESSED_FOLDER, output_filename)
+        # Define output directory
+        output_dir = os.path.join(PROCESSED_FOLDER, f'dicom_viewer_{timestamp}')
+        os.makedirs(output_dir, exist_ok=True)
         
-        # Process uploaded files to generate visualization
+        # Process uploaded files to generate DICOM viewer
         try:
-            # Get threshold parameters if provided
-            lower_threshold = request.form.get('lower_threshold', None)
-            upper_threshold = request.form.get('upper_threshold', None)
-            
-            # Convert string values to float if provided
-            if lower_threshold and lower_threshold.strip():
-                lower_threshold = float(lower_threshold)
-            else:
-                lower_threshold = None
-                
-            if upper_threshold and upper_threshold.strip():
-                upper_threshold = float(upper_threshold)
-            else:
-                upper_threshold = None
-            
-            # Import the new 2D model function
-            from python.dicom_visualizer import convert_to_2d_model
-            
-            # Generate 2D model visualization
-            main_output, additional_outputs = convert_to_2d_model(
-                upload_dir, 
-                output_path,
-                lower_threshold=lower_threshold,
-                upper_threshold=upper_threshold
-            )
+            # Generate DICOM viewer images
+            viewer_result = process_dicom_folder_for_viewer(upload_dir, output_dir)
             
             # Prepare URLs for response
-            output_url = f"/serve/processed/{output_filename}"
+            main_image_url = f"/serve/processed/dicom_viewer_{timestamp}/{os.path.basename(viewer_result['main_image'])}"
+            multi_view_url = f"/serve/processed/dicom_viewer_{timestamp}/{os.path.basename(viewer_result['multi_view'])}"
+            interactive_viewer_url = f"/serve/processed/dicom_viewer_{timestamp}/interactive_viewer.html"
             
             # Add all outputs to the response
-            all_outputs = [output_url]
-            for additional_path in additional_outputs:
-                additional_filename = os.path.basename(additional_path)
-                all_outputs.append(f"/serve/processed/{additional_filename}")
+            all_outputs = [main_image_url, multi_view_url]
+            for nav_img in viewer_result['navigation_images']:
+                nav_url = f"/serve/processed/dicom_viewer_{timestamp}/{os.path.basename(nav_img)}"
+                all_outputs.append(nav_url)
             
             # Prepare response
             return jsonify({
-                'message': 'DICOM visualization generated successfully!',
-                'output': output_url,
-                'all_outputs': all_outputs
+                'message': 'DICOM viewer generated successfully!',
+                'output': main_image_url,
+                'multi_view': multi_view_url,
+                'interactive_viewer': interactive_viewer_url,
+                'all_outputs': all_outputs,
+                'total_slices': viewer_result['total_slices'],
+                'service_type': 'dicom_viewer'
             })
             
         except Exception as e:
             import traceback
             error_details = traceback.format_exc()
-            app.logger.error(f"Error processing 3D model: {str(e)}\n{error_details}")
-            return jsonify({'error': f"Error generating 3D model: {str(e)}"})
+            app.logger.error(f"Error processing DICOM viewer: {str(e)}\n{error_details}")
+            return jsonify({'error': f"Error generating DICOM viewer: {str(e)}"})
     
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
-        app.logger.error(f"Server error in 3D model route: {str(e)}\n{error_details}")
+        app.logger.error(f"Server error in DICOM viewer route: {str(e)}\n{error_details}")
         return jsonify({'error': f"Server error: {str(e)}"})
+    
 
 @app.route('/view_model/<path:model_name>')
 def view_model(model_name):
     """
     Render a model viewer for the given model name.
-    Now supports both 3D STL models and 2D visualizations.
+    Now supports both HTML viewers and image displays.
     """
     # Ensure model name is sanitized
     model_name = secure_filename(model_name)
@@ -434,17 +503,18 @@ def view_model(model_name):
     possible_paths = [
         os.path.join(PROCESSED_FOLDER, model_name),
         os.path.join(PROCESSED_FOLDER, 'local_3d_model', model_name),
+        os.path.join(PROCESSED_FOLDER, f"{model_name}.html"),
+        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{model_name}.html"),
         os.path.join(PROCESSED_FOLDER, f"{model_name}.png"),
         os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{model_name}.png"),
-        os.path.join(PROCESSED_FOLDER, f"{model_name}.jpg"),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{model_name}.jpg"),
     ]
     
-    # Add .stl extension and check
-    if not model_name.lower().endswith('.stl'):
-        stl_path = f"{model_name}.stl"
-        possible_paths.append(os.path.join(PROCESSED_FOLDER, stl_path))
-        possible_paths.append(os.path.join(PROCESSED_FOLDER, 'local_3d_model', stl_path))
+    # Check for HTML files in dicom_viewer folders
+    import glob
+    dicom_viewer_folders = glob.glob(os.path.join(PROCESSED_FOLDER, '**/dicom_viewer_*'), recursive=True)
+    for folder in dicom_viewer_folders:
+        possible_paths.append(os.path.join(folder, model_name))
+        possible_paths.append(os.path.join(folder, 'interactive_viewer.html'))
     
     model_path = None
     for path in possible_paths:
@@ -454,66 +524,80 @@ def view_model(model_name):
     
     # Check if file exists
     if not model_path:
-        # Return a simple error message
         return f"Model not found: {model_name}", 404
     
-    # Determine if it's an STL file or a 2D image
-    if model_path.lower().endswith('.stl'):
-        # Generate HTML viewer for 3D STL model
-        html_content = generate_html_viewer(model_path)
-        return html_content
+    # Determine if it's an HTML file or an image
+    if model_path.lower().endswith('.html'):
+        # For HTML files, read and return content
+        try:
+            with open(model_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            return html_content
+        except Exception as e:
+            return f"Error reading HTML file: {str(e)}", 500
     else:
-        # For 2D images, create a simple HTML page to display the image
-        image_url = f"/serve/processed/{os.path.basename(model_path)}"
+        # For images, create a simple HTML page to display the image
+        image_url = f"/serve/processed/{os.path.relpath(model_path, PROCESSED_FOLDER)}"
         html_content = f"""
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>AORTEC Model Viewer</title>
+            <title>AORTEC DICOM Viewer</title>
             <style>
                 body {{
                     margin: 0;
                     padding: 20px;
-                    background-color: #f0f0f0;
+                    background-color: #1a1a1a;
+                    color: white;
                     font-family: Arial, sans-serif;
                     text-align: center;
                 }}
                 h1 {{
-                    color: #333;
+                    color: #f9a826;
                 }}
                 .viewer-container {{
                     margin: 20px auto;
-                    background-color: white;
+                    background-color: #2a2a2a;
                     padding: 20px;
                     border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                     max-width: 90%;
                 }}
                 img {{
                     max-width: 100%;
                     height: auto;
-                    border: 1px solid #ddd;
+                    border: 2px solid #f9a826;
+                    border-radius: 5px;
                 }}
                 .instructions {{
-                    background-color: #f8f9fa;
-                    border: 1px solid #e9ecef;
+                    background-color: #3a3a3a;
+                    border: 1px solid #555;
                     border-radius: 4px;
-                    padding: 10px 15px;
+                    padding: 15px;
                     margin: 15px 0;
                     text-align: left;
+                }}
+                .instructions h3 {{
+                    color: #f9a826;
+                    margin-top: 0;
                 }}
             </style>
         </head>
         <body>
-            <h1>AORTEC DICOM Visualization</h1>
+            <h1>AORTEC DICOM Viewer</h1>
             <div class="viewer-container">
-                <img src="{image_url}" alt="DICOM Visualization">
+                <img src="{image_url}" alt="DICOM Viewer">
                 <div class="instructions">
-                    <p><strong>About this visualization:</strong></p>
-                    <p>This image shows a visualization of your DICOM data. Segmented areas are highlighted 
-                       based on threshold values to help identify structures of interest.</p>
+                    <h3>About this visualization:</h3>
+                    <p>This image shows a DICOM viewer with measurement rulers. The yellow rulers indicate measurements in millimeters, and the red tick marks show measurement intervals.</p>
+                    <ul>
+                        <li>Yellow rulers show precise measurements in millimeters</li>
+                        <li>Red tick marks indicate measurement intervals</li>
+                        <li>Pixel spacing information is displayed for accuracy</li>
+                        <li>This viewer helps with medical image analysis and measurements</li>
+                    </ul>
                 </div>
             </div>
         </body>

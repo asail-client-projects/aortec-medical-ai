@@ -1,19 +1,16 @@
-# Handles segmentation tasks, including refining the segmented data.
-#-----------------------------------
+# Updated segmentation.py - Now compatible with DICOM viewer approach
 import os
 import numpy as np
 import SimpleITK as sitk
 from PIL import Image
 import zipfile
 import tempfile
-from .dicom_processor import read_dicom_folder, extract_zip
 import shutil
 import pydicom
-import vtk
-from vtk.util import numpy_support
 import traceback
 import logging
 import matplotlib.pyplot as plt
+from .dicom_processor import read_dicom_folder, extract_zip
 
 def apply_segmentation(input_folder, output_folder, lower_threshold=100, upper_threshold=300):
     """
@@ -256,353 +253,43 @@ def process_dicom_folder_for_segmentation(folder_path, output_folder):
     """
     return apply_segmentation(folder_path, output_folder)
 
-# New improved 3D model generation functions
+# Legacy compatibility functions - redirect to new DICOM viewer implementation
 def convert_to_3d_model(input_path, output_path, lower_threshold=None, upper_threshold=None):
     """
-    Convert DICOM files to a 3D STL model with improved accuracy.
-    
-    Args:
-        input_path: Path to a folder containing DICOM files or a single DICOM file
-        output_path: Path to save the STL model
-        lower_threshold: Lower threshold for segmentation (HU value), auto-detected if None
-        upper_threshold: Upper threshold for segmentation (HU value), auto-detected if None
-        
-    Returns:
-        Path to the generated STL file
+    Legacy function - now redirects to DICOM viewer implementation.
     """
-    print(f"[3D Model] Converting {input_path} to {output_path}")
-    
-    try:
-        # Create output directory if it doesn't exist
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        # Make sure the thresholds are properly parsed
-        if lower_threshold is not None and not isinstance(lower_threshold, (int, float)):
-            try:
-                lower_threshold = float(lower_threshold)
-            except (ValueError, TypeError):
-                print(f"[3D Model] Invalid lower threshold value '{lower_threshold}', using default")
-                lower_threshold = None
-                
-        if upper_threshold is not None and not isinstance(upper_threshold, (int, float)):
-            try:
-                upper_threshold = float(upper_threshold)
-            except (ValueError, TypeError):
-                print(f"[3D Model] Invalid upper threshold value '{upper_threshold}', using default")
-                upper_threshold = None
-        
-        # Create a temporary directory for processing
-        temp_dir = tempfile.mkdtemp()
-        print(f"[3D Model] Created temporary directory: {temp_dir}")
-        
-        try:
-            # If input is a ZIP file, extract it to the temporary directory
-            if isinstance(input_path, str) and input_path.lower().endswith('.zip'):
-                try:
-                    with zipfile.ZipFile(input_path, 'r') as zip_ref:
-                        zip_ref.extractall(temp_dir)
-                    input_folder = temp_dir
-                    print(f"[3D Model] Extracted ZIP file to {temp_dir}")
-                except Exception as e:
-                    print(f"[3D Model] Error extracting ZIP file: {str(e)}")
-                    raise ValueError(f"Failed to extract ZIP file: {str(e)}")
-            
-            # If input is a directory, use it directly
-            elif isinstance(input_path, str) and os.path.isdir(input_path):
-                input_folder = input_path
-                print(f"[3D Model] Using existing folder: {input_folder}")
-            
-            # If input is a single file, check if it's a DICOM file
-            elif isinstance(input_path, str) and os.path.isfile(input_path):
-                # If it's a single DICOM file, check if other DICOM files exist in the same directory
-                parent_dir = os.path.dirname(input_path)
-                
-                # Find all potential DICOM files in the parent directory
-                all_files = []
-                for ext in ['', '.dcm', '.DCM', '.ima', '.IMA']:
-                    from glob import glob
-                    all_files.extend(glob(os.path.join(parent_dir, f"*{ext}")))
-                
-                # Count valid DICOM files
-                dicom_count = 0
-                for file_path in all_files:
-                    try:
-                        pydicom.dcmread(file_path, stop_before_pixels=True)
-                        dicom_count += 1
-                    except:
-                        pass
-                
-                print(f"[3D Model] Found {dicom_count} DICOM files in parent directory")
-                
-                if dicom_count > 1:
-                    # If multiple DICOM files exist, use the parent directory
-                    input_folder = parent_dir
-                    print(f"[3D Model] Using parent directory containing multiple DICOM files: {input_folder}")
-                else:
-                    # For a single file, copy it to the temp directory and warn that it may not produce a good 3D model
-                    print("[3D Model] WARNING: Creating a 3D model from a single DICOM file may not produce accurate results.")
-                    shutil.copy(input_path, os.path.join(temp_dir, os.path.basename(input_path)))
-                    input_folder = temp_dir
-            else:
-                raise ValueError(f"Unsupported input type: {input_path}")
-            
-            # Load the DICOM series from the folder
-            print(f"[3D Model] Loading DICOM series from {input_folder}")
-            
-            # Create the 3D model
-            return create_3d_model_from_dicom_folder(input_folder, output_path, lower_threshold, upper_threshold)
-            
-        finally:
-            # Clean up the temporary directory if it's not the input_path
-            if os.path.exists(temp_dir) and temp_dir != input_path:
-                try:
-                    shutil.rmtree(temp_dir)
-                    print(f"[3D Model] Cleaned up temporary directory: {temp_dir}")
-                except Exception as e:
-                    print(f"[3D Model] Error cleaning up temporary directory: {str(e)}")
-    
-    except Exception as e:
-        error_details = traceback.format_exc()
-        error_message = f"Error creating 3D model: {str(e)}\n{error_details}"
-        print(error_message)
-        
-        # Generate a simple error image instead
-        try:
-            error_img = Image.new('RGB', (800, 600), color=(255, 240, 240))
-            from PIL import ImageDraw
-            draw = ImageDraw.Draw(error_img)
-            draw.text((50, 50), "Error generating 3D model:", fill=(200, 0, 0))
-            draw.text((50, 80), str(e), fill=(200, 0, 0))
-            draw.text((50, 120), "Please check if your DICOM files are valid and from the same series.", fill=(0, 0, 0))
-            draw.text((50, 150), "Try adjusting threshold values or using a different set of files.", fill=(0, 0, 0))
-            
-            # Save the error image in place of the preview
-            preview_path = output_path.replace('.stl', '_preview.png')
-            error_img.save(preview_path)
-            print(f"[3D Model] Created error image at {preview_path}")
-            
-            # Create a simple placeholder STL file
-            with open(output_path, 'wb') as f:
-                f.write(b'ERROR: Failed to generate STL model')
-            
-            return output_path
-        except:
-            # Last resort - just re-raise the original error
-            raise Exception(error_message)
+    from .model_converter import convert_to_3d_model as new_convert_to_3d_model
+    return new_convert_to_3d_model(input_path, output_path, lower_threshold, upper_threshold)
 
 def create_3d_model_from_dicom_folder(dicom_folder, output_path, lower_threshold=None, upper_threshold=None):
     """
-    Create a 3D model from a folder of DICOM files using VTK.
-    
-    Args:
-        dicom_folder: Path to the folder containing DICOM files
-        output_path: Path to save the STL model
-        lower_threshold: Lower threshold for segmentation (HU value), auto-detected if None
-        upper_threshold: Upper threshold for segmentation (HU value), auto-detected if None
-        
-    Returns:
-        Path to the generated STL file
+    Legacy function - now redirects to DICOM viewer implementation.
     """
-    try:
-        # Find all DICOM files in the directory
-        dicom_files = []
-        for root, _, files in os.walk(dicom_folder):
-            for file in files:
-                # Include files with .dcm extension or no extension (common for DICOM)
-                file_path = os.path.join(root, file)
-                try:
-                    if file.lower().endswith('.dcm') or not os.path.splitext(file)[1]:
-                        pydicom.dcmread(file_path, stop_before_pixels=True)  # Check if it's a valid DICOM
-                        dicom_files.append(file_path)
-                except:
-                    pass  # Not a valid DICOM file, skip
-        
-        if not dicom_files:
-            raise ValueError("No valid DICOM files found in the directory")
-        
-        print(f"[3D Model] Found {len(dicom_files)} DICOM files")
-        
-        # Use VTK's DICOM reader to read the series
-        reader = vtk.vtkDICOMImageReader()
-        reader.SetDirectoryName(dicom_folder)
-        reader.Update()
-        
-        # Get image data
-        image_data = reader.GetOutput()
-        dimensions = image_data.GetDimensions()
-        spacing = image_data.GetSpacing()
-        
-        print(f"[3D Model] Image dimensions: {dimensions}, spacing: {spacing}")
-        
-        # Set default thresholds if not provided and if auto-detection fails
-        if lower_threshold is None:
-            lower_threshold = 100  # Default fallback value
-        
-        if upper_threshold is None:
-            upper_threshold = 3000  # Default fallback value
-        
-        # Try to auto-detect threshold values if not provided
-        try:
-            # Get the scalar range of the volume
-            scalar_range = image_data.GetScalarRange()
-            print(f"[3D Model] Scalar range: {scalar_range}")
-            
-            # For CT images, use Hounsfield units (HU)
-            # Extract data as numpy array for analysis
-            vtk_data = image_data.GetPointData().GetScalars()
-            
-            # Ensure we have valid data to analyze
-            if vtk_data and vtk_data.GetNumberOfTuples() > 0:
-                numpy_data = numpy_support.vtk_to_numpy(vtk_data)
-                
-                # Only reshape if dimensions make sense
-                if (dimensions[0] * dimensions[1] * dimensions[2]) == len(numpy_data):
-                    numpy_data = numpy_data.reshape(dimensions[2], dimensions[1], dimensions[0])
-                    
-                    # Get histogram for visualization
-                    hist, bin_edges = np.histogram(numpy_data.flatten(), bins=100)
-                    
-                    # Auto-detect thresholds only if we don't have user-provided values
-                    if lower_threshold is None or upper_threshold is None:
-                        # Use more robust method to find thresholds
-                        sorted_data = np.sort(numpy_data.flatten())
-                        
-                        # Remove background (usually air) by skipping lowest 10%
-                        start_idx = int(len(sorted_data) * 0.1)
-                        if start_idx < len(sorted_data):
-                            non_background = sorted_data[start_idx:]
-                            
-                            # Only calculate percentiles if we have enough data
-                            if len(non_background) > 0:
-                                if lower_threshold is None:
-                                    # Default lower threshold: 25th percentile of non-background
-                                    lower_threshold = int(np.percentile(non_background, 25))
-                                
-                                if upper_threshold is None:
-                                    # Default upper threshold: 75th percentile of non-background
-                                    upper_threshold = int(np.percentile(non_background, 75))
-                                    
-                                print(f"[3D Model] Auto-detected thresholds - Lower: {lower_threshold}, Upper: {upper_threshold}")
-        except Exception as e:
-            print(f"[3D Model] Auto-threshold detection failed: {str(e)}. Using default values.")
-            # If auto-detection fails, use default values
-            if lower_threshold is None:
-                lower_threshold = 100  # Common threshold for soft tissue in CT
-            
-            if upper_threshold is None:
-                upper_threshold = 3000  # Maximum typical HU value
-        
-        # Ensure we have valid threshold values
-        print(f"[3D Model] Using thresholds - Lower: {lower_threshold}, Upper: {upper_threshold}")
-        
-        # Try to create a histogram image for preview if we have valid data
-        try:
-            plt.figure(figsize=(10, 6))
-            vtk_data = image_data.GetPointData().GetScalars()
-            if vtk_data and vtk_data.GetNumberOfTuples() > 0:
-                numpy_data = numpy_support.vtk_to_numpy(vtk_data)
-                plt.hist(numpy_data, bins=100, alpha=0.7)
-                plt.axvline(lower_threshold, color='r', linestyle='--', label=f'Lower Threshold ({lower_threshold})')
-                plt.axvline(upper_threshold, color='g', linestyle='--', label=f'Upper Threshold ({upper_threshold})')
-                plt.title('Intensity Histogram with Segmentation Thresholds')
-                plt.xlabel('Intensity')
-                plt.ylabel('Frequency')
-                plt.legend()
-                
-                # Save histogram preview
-                preview_path = output_path.replace('.stl', '_histogram.png')
-                plt.savefig(preview_path)
-            plt.close()
-        except Exception as e:
-            print(f"[3D Model] Could not generate histogram: {str(e)}")
-        
-        # Create a threshold filter to segment the AAA
-        threshold = vtk.vtkImageThreshold()
-        threshold.SetInputConnection(reader.GetOutputPort())
-        threshold.ThresholdBetween(lower_threshold, upper_threshold)
-        threshold.ReplaceInOn()
-        threshold.SetInValue(1)
-        threshold.ReplaceOutOn()
-        threshold.SetOutValue(0)
-        threshold.Update()
-        
-        # Generate surface with marching cubes
-        surface = vtk.vtkMarchingCubes() if vtk.vtkVersion().GetVTKMajorVersion() < 6 else vtk.vtkDiscreteMarchingCubes()
-        surface.SetInputConnection(threshold.GetOutputPort())
-        surface.GenerateValues(1, 1, 1)
-        surface.Update()
-        
-        # Check if the output has any points
-        if surface.GetOutput().GetNumberOfPoints() == 0:
-            raise ValueError("No surface was generated. Try adjusting threshold values.")
-        
-        # Smooth the surface
-        smoother = vtk.vtkWindowedSincPolyDataFilter()
-        smoother.SetInputConnection(surface.GetOutputPort())
-        smoother.SetNumberOfIterations(15)
-        smoother.SetPassBand(0.1)
-        smoother.SetBoundarySmoothing(True)
-        smoother.Update()
-        
-        # Decimate (reduce polygon count) to make the model more manageable
-        decimate = vtk.vtkDecimatePro()
-        decimate.SetInputConnection(smoother.GetOutputPort())
-        decimate.SetTargetReduction(0.5)  # Reduce by 50%
-        decimate.PreserveTopologyOn()
-        decimate.Update()
-        
-        # Get the largest connected component to remove small floating pieces
-        connect = vtk.vtkPolyDataConnectivityFilter()
-        connect.SetInputConnection(decimate.GetOutputPort())
-        connect.SetExtractionModeToLargestRegion()
-        connect.Update()
-        
-        # Generate surface normals for better rendering
-        normals = vtk.vtkPolyDataNormals()
-        normals.SetInputConnection(connect.GetOutputPort())
-        normals.SetFeatureAngle(60.0)
-        normals.Update()
-        
-        # Save the model to STL file
-        writer = vtk.vtkSTLWriter()
-        writer.SetInputConnection(normals.GetOutputPort())
-        writer.SetFileName(output_path)
-        writer.SetFileTypeToBinary()
-        writer.Write()
-        
-        print(f"[3D Model] Successfully created STL model: {output_path}")
-        
-        # Generate a preview image
-        generate_model_preview(normals.GetOutput(), output_path.replace('.stl', '_preview.png'))
-        
-        return output_path
-        
-    except Exception as e:
-        error_details = traceback.format_exc()
-        error_message = f"Error creating 3D model from DICOM folder: {str(e)}\n{error_details}"
-        print(error_message)
-        raise Exception(error_message)
+    from .model_converter import process_dicom_folder_for_viewer
+    
+    # Create output directory
+    output_dir = os.path.dirname(output_path)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Use the new DICOM viewer functionality
+    viewer_result = process_dicom_folder_for_viewer(dicom_folder, output_dir)
+    
+    # Copy the main image to the requested output path
+    if os.path.exists(viewer_result['main_image']):
+        shutil.copy(viewer_result['main_image'], output_path)
+    
+    return output_path
 
 def create_3d_model_from_single_dicom(dicom_file, output_path, lower_threshold=None, upper_threshold=None):
     """
-    Create a simple 3D model from a single DICOM file - limited functionality.
-    
-    Args:
-        dicom_file: Path to a DICOM file
-        output_path: Path to save the STL model
-        lower_threshold: Lower threshold for segmentation (HU value)
-        upper_threshold: Upper threshold for segmentation (HU value)
-        
-    Returns:
-        Path to the generated STL file
+    Legacy function - now creates a simple viewer from single DICOM file.
     """
-    print("[WARNING] Creating a 3D model from a single DICOM file is not recommended.")
-    print("[WARNING] Results may be incomplete or inaccurate without a full DICOM series.")
+    print("[WARNING] Creating a viewer from a single DICOM file is not optimal.")
+    print("[WARNING] Results may be incomplete without a full DICOM series.")
     
     try:
         # Read the DICOM file
         dcm = pydicom.dcmread(dicom_file)
-        print(dicom_file)
         
         # Check if pixel data is available
         if not hasattr(dcm, 'pixel_array'):
@@ -610,118 +297,44 @@ def create_3d_model_from_single_dicom(dicom_file, output_path, lower_threshold=N
         
         pixel_data = dcm.pixel_array
         
-        # Convert to proper 3D volume (single slice)
-        # This won't create a true 3D model, but will create a relief map of the slice
-        if len(pixel_data.shape) == 2:
-            # Create a 3D volume with a small thickness
-            volume = np.zeros((3, pixel_data.shape[0], pixel_data.shape[1]), dtype=np.float32)
-            for i in range(3):  # Create 3 slices for minimal thickness
-                volume[i, :, :] = pixel_data.astype(np.float32)
+        # Normalize the data
+        if pixel_data.max() != pixel_data.min():
+            normalized_data = ((pixel_data - pixel_data.min()) / 
+                            (pixel_data.max() - pixel_data.min()) * 255).astype(np.uint8)
         else:
-            # In case the single DICOM already contains a 3D volume
-            volume = pixel_data.astype(np.float32)
+            normalized_data = np.zeros_like(pixel_data, dtype=np.uint8)
         
-        # Convert the volume to a VTK image
-        flat_data = volume.ravel()
+        # Create a simple viewer-like image
+        fig, ax = plt.subplots(figsize=(10, 8))
+        fig.patch.set_facecolor('black')
         
-        # Create VTK data array
-        vtk_data = numpy_support.numpy_to_vtk(flat_data, deep=True, array_type=vtk.VTK_FLOAT)
+        # Display the image
+        ax.imshow(normalized_data, cmap='gray', aspect='equal')
         
-        # Create a VTK image data
-        vtk_image = vtk.vtkImageData()
-        vtk_image.SetDimensions(volume.shape[2], volume.shape[1], volume.shape[0])
-        vtk_image.GetPointData().SetScalars(vtk_data)
+        # Add title
+        ax.set_title("DICOM Viewer - Single File", color='white', fontsize=16)
         
-        # Auto-detect thresholds if needed
-        if lower_threshold is None:
-            # Default for a single slice: use the 30th percentile
-            lower_threshold = int(np.percentile(volume, 30))
+        # Add warning text
+        ax.text(0.02, 0.98, "WARNING: Single DICOM file viewer\nFor best results, use a complete series", 
+                transform=ax.transAxes, color='yellow', fontsize=10,
+                verticalalignment='top', bbox=dict(boxstyle="round,pad=0.3", 
+                facecolor='red', alpha=0.7))
         
-        if upper_threshold is None:
-            # Default for a single slice: use the 70th percentile
-            upper_threshold = int(np.percentile(volume, 70))
+        # Remove axes
+        ax.set_xticks([])
+        ax.set_yticks([])
         
-        print(f"Using thresholds - Lower: {lower_threshold}, Upper: {upper_threshold}")
+        plt.tight_layout()
+        plt.savefig(output_path, dpi=150, bbox_inches='tight', 
+                   facecolor='black', edgecolor='none')
+        plt.close()
         
-        # Create a threshold filter
-        threshold = vtk.vtkImageThreshold()
-        threshold.SetInputData(vtk_image)
-        threshold.ThresholdBetween(lower_threshold, upper_threshold)
-        threshold.ReplaceInOn()
-        threshold.SetInValue(1)
-        threshold.ReplaceOutOn()
-        threshold.SetOutValue(0)
-        threshold.Update()
-        
-        # Generate surface with marching cubes
-        surface = vtk.vtkMarchingCubes()
-        surface.SetInputConnection(threshold.GetOutputPort())
-        surface.SetValue(0, 0.5)
-        surface.Update()
-        
-        # Check if we got any surface
-        if surface.GetOutput().GetNumberOfPoints() == 0:
-            raise ValueError("No surface could be extracted with the current threshold values")
-        
-        # Smooth the surface
-        smoother = vtk.vtkSmoothPolyDataFilter()
-        smoother.SetInputConnection(surface.GetOutputPort())
-        smoother.SetNumberOfIterations(15)
-        smoother.SetRelaxationFactor(0.1)
-        smoother.Update()
-        
-        # Save the model to STL file
-        writer = vtk.vtkSTLWriter()
-        writer.SetInputConnection(smoother.GetOutputPort())
-        writer.SetFileName(output_path)
-        writer.SetFileTypeToBinary()
-        writer.Write()
-        
-        # Generate a warning image for preview
-        warning_img = Image.new('RGB', (800, 600), color=(255, 255, 255))
-        from PIL import ImageDraw
-        draw = ImageDraw.Draw(warning_img)
-        draw.text((50, 50), "WARNING: 3D model created from a single DICOM file.", fill=(255, 0, 0))
-        draw.text((50, 80), "Results may be incomplete or inaccurate.", fill=(255, 0, 0))
-        draw.text((50, 110), "For best results, use a complete DICOM series.", fill=(255, 0, 0))
-        draw.text((50, 160), f"Threshold values used: Lower={lower_threshold}, Upper={upper_threshold}", fill=(0, 0, 0))
-        
-        # Add a small visualization of the slice if possible
-        try:
-            # Normalize the middle slice for display
-            if len(pixel_data.shape) == 2:
-                slice_img = pixel_data
-            else:
-                slice_img = pixel_data[pixel_data.shape[0]//2]
-                
-            # Normalize to 0-255
-            min_val = np.min(slice_img)
-            max_val = np.max(slice_img)
-            if max_val > min_val:
-                norm_slice = ((slice_img - min_val) / (max_val - min_val) * 255).astype(np.uint8)
-                pil_slice = Image.fromarray(norm_slice)
-                
-                # Resize to fit in the preview
-                max_size = 300
-                ratio = min(max_size / pil_slice.width, max_size / pil_slice.height)
-                new_size = (int(pil_slice.width * ratio), int(pil_slice.height * ratio))
-                pil_slice = pil_slice.resize(new_size)
-                
-                # Paste into the warning image
-                warning_img.paste(pil_slice, (50, 200))
-        except Exception as e:
-            print(f"Could not include slice visualization: {str(e)}")
-        
-        preview_path = output_path.replace('.stl', '_preview.png')
-        warning_img.save(preview_path)
-        
-        print(f"[3D Model] Created limited STL model from single file: {output_path}")
-        
+        print(f"[Single DICOM Viewer] Created viewer from single file: {output_path}")
         return output_path
     
     except Exception as e:
         error_details = traceback.format_exc()
-        error_message = f"Error creating 3D model from single DICOM: {str(e)}\n{error_details}"
+        error_message = f"Error creating viewer from single DICOM: {str(e)}\n{error_details}"
         print(error_message)
         
         # Create an error image
@@ -731,269 +344,34 @@ def create_3d_model_from_single_dicom(dicom_file, output_path, lower_threshold=N
         draw.text((50, 50), "Error processing single DICOM file:", fill=(200, 0, 0))
         draw.text((50, 80), str(e), fill=(200, 0, 0))
         draw.text((50, 120), "Single DICOM files often do not contain enough information", fill=(0, 0, 0))
-        draw.text((50, 150), "for creating useful 3D models. Please use a complete series.", fill=(0, 0, 0))
+        draw.text((50, 150), "for creating useful viewers. Please use a complete series.", fill=(0, 0, 0))
         
         # Save the error image
-        preview_path = output_path.replace('.stl', '_preview.png')
-        error_img.save(preview_path)
-        
-        # Create a simple placeholder STL file
-        with open(output_path, 'wb') as f:
-            f.write(b'ERROR: Failed to generate STL model from single DICOM')
-            
+        error_img.save(output_path)
         return output_path
-    
 
 def generate_model_preview(poly_data, output_path):
     """
-    Generate a preview image of the 3D model.
-    
-    Args:
-        poly_data: VTK PolyData containing the 3D model
-        output_path: Path to save the preview image
+    Legacy function - now creates a simple preview image.
     """
     try:
-        # Check if polydata is valid
-        if not poly_data or poly_data.GetNumberOfPoints() == 0:
-            raise ValueError("Invalid polydata - no points to render")
-            
-        # Create a renderer and window
-        renderer = vtk.vtkRenderer()
-        render_window = vtk.vtkRenderWindow()
-        render_window.SetOffScreenRendering(1)  # Off-screen rendering
-        render_window.AddRenderer(renderer)
-        render_window.SetSize(800, 600)
-        
-        # Create a render window interactor - needed for off-screen rendering
-        interactor = vtk.vtkRenderWindowInteractor()
-        interactor.SetRenderWindow(render_window)
-        
-        # Add the model to the renderer
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputData(poly_data)
-        
-        actor = vtk.vtkActor()
-        actor.SetMapper(mapper)
-        actor.GetProperty().SetColor(1.0, 0.5, 0.5)  # Reddish color for AAA
-        
-        renderer.AddActor(actor)
-        renderer.SetBackground(0.1, 0.1, 0.2)  # Dark blue background
-        
-        # Add orientation axes if available in this VTK version
-        try:
-            axes = vtk.vtkAxesActor()
-            axes.SetTotalLength(50, 50, 50)
-            axes.SetShaftTypeToCylinder()
-            axes.SetCylinderRadius(0.02)
-            
-            widget = vtk.vtkOrientationMarkerWidget()
-            widget.SetOutlineColor(0.9300, 0.5700, 0.1300)
-            widget.SetOrientationMarker(axes)
-            widget.SetInteractor(interactor)
-            widget.SetViewport(0.0, 0.0, 0.2, 0.2)
-            widget.SetEnabled(1)
-            widget.InteractiveOff()
-        except Exception as e:
-            print(f"Could not add orientation axes: {str(e)}")
-        
-        # Initialize the interactor - required for off-screen rendering
-        interactor.Initialize()
-        
-        # Reset camera to view the entire model
-        renderer.ResetCamera()
-        camera = renderer.GetActiveCamera()
-        camera.Azimuth(30)
-        camera.Elevation(30)
-        renderer.ResetCameraClippingRange()
-        
-        # Render the scene
-        render_window.Render()
-        
-        # Save the image
-        window_to_image = vtk.vtkWindowToImageFilter()
-        window_to_image.SetInput(render_window)
-        window_to_image.SetScale(1)
-        window_to_image.Update()
-        
-        writer = vtk.vtkPNGWriter()
-        writer.SetFileName(output_path)
-        writer.SetInputConnection(window_to_image.GetOutputPort())
-        writer.Write()
-        
-        print(f"[3D Model] Preview image saved to: {output_path}")
-    
-    except Exception as e:
-        print(f"Error generating preview image: {str(e)}")
         # Create a simple placeholder image
-        placeholder = Image.new('RGB', (800, 600), color=(200, 200, 200))
+        placeholder = Image.new('RGB', (800, 600), color=(50, 50, 50))
         from PIL import ImageDraw
         draw = ImageDraw.Draw(placeholder)
-        draw.text((50, 50), f"3D Model Preview Not Available: {str(e)}", fill=(0, 0, 0))
+        draw.text((50, 50), "DICOM Viewer Generated", fill=(255, 255, 255))
+        draw.text((50, 80), "Use the interactive viewer for full functionality", fill=(200, 200, 200))
         placeholder.save(output_path)
+        print(f"[Preview] Created preview image: {output_path}")
+    except Exception as e:
+        print(f"Error generating preview image: {str(e)}")
 
 def generate_html_viewer(stl_path):
     """
-    Generate an HTML file with a 3D STL viewer using Three.js.
-    
-    Args:
-        stl_path: Path to the STL file to visualize
-        
-    Returns:
-        HTML content as a string
+    Legacy function - now redirects to new HTML viewer implementation.
     """
-    # Extract the model filename from the path
-    model_filename = os.path.basename(stl_path)
-    model_url = f"/serve/processed/{model_filename}"
+    from .model_converter import generate_html_viewer as new_generate_html_viewer
     
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>AORTEC 3D Model Viewer</title>
-        <style>
-            body {{ margin: 0; overflow: hidden; }}
-            #info {{
-                position: absolute;
-                top: 10px;
-                width: 100%;
-                text-align: center;
-                color: white;
-                font-family: Arial, sans-serif;
-                pointer-events: none;
-                text-shadow: 0 0 4px #000;
-            }}
-            #controls {{
-                position: absolute;
-                bottom: 10px;
-                left: 10px;
-                background-color: rgba(0,0,0,0.6);
-                color: white;
-                padding: 10px;
-                border-radius: 5px;
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-            }}
-        </style>
-    </head>
-    <body>
-        <div id="info">AORTEC 3D Model Viewer</div>
-        <div id="controls">
-            <div>Rotate: Left-click + drag</div>
-            <div>Pan: Shift + left-click + drag</div>
-            <div>Zoom: Mouse wheel or right-click + drag</div>
-        </div>
-        
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/STLLoader.js"></script>
-        
-        <script>
-            // Scene setup
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x111122);
-            
-            // Camera setup
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-            camera.position.set(0, 0, 200);
-            
-            // Renderer setup
-            const renderer = new THREE.WebGLRenderer({{ antialias: true }});
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
-            
-            // Lights
-            const ambientLight = new THREE.AmbientLight(0x404040, 1);
-            scene.add(ambientLight);
-            
-            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight1.position.set(1, 1, 1);
-            scene.add(directionalLight1);
-            
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight2.position.set(-1, -1, -1);
-            scene.add(directionalLight2);
-            
-            // Controls
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.25;
-            controls.rotateSpeed = 0.35;
-            
-            // STL Model loading
-            const loader = new THREE.STLLoader();
-            loader.load('{model_url}', function(geometry) {{
-                // Center the geometry
-                geometry.computeBoundingBox();
-                const boundingBox = geometry.boundingBox;
-                const center = new THREE.Vector3();
-                boundingBox.getCenter(center);
-                geometry.translate(-center.x, -center.y, -center.z);
-                
-                // Calculate size for camera positioning
-                const size = new THREE.Vector3();
-                boundingBox.getSize(size);
-                const maxDim = Math.max(size.x, size.y, size.z);
-                const dist = maxDim * 2;
-                camera.position.set(dist, dist, dist);
-                camera.lookAt(0, 0, 0);
-                
-                // Create material with aorta-like color
-                const material = new THREE.MeshPhongMaterial({{
-                    color: 0xee4b4b,
-                    specular: 0x111111,
-                    shininess: 100,
-                    side: THREE.DoubleSide
-                }});
-                
-                const mesh = new THREE.Mesh(geometry, material);
-                scene.add(mesh);
-                
-                // Add wireframe for better visibility
-                const wireframeMaterial = new THREE.MeshBasicMaterial({{
-                    color: 0xffffff,
-                    wireframe: true,
-                    transparent: true,
-                    opacity: 0.15
-                }});
-                const wireframe = new THREE.Mesh(geometry, wireframeMaterial);
-                scene.add(wireframe);
-                
-                // Set camera to fit the model
-                controls.reset();
-                
-                // Add a floor grid for orientation
-                const gridHelper = new THREE.GridHelper(maxDim * 2, 20, 0x888888, 0x444444);
-                gridHelper.position.y = -maxDim / 2;
-                scene.add(gridHelper);
-                
-                // Add axes for orientation
-                const axesHelper = new THREE.AxesHelper(maxDim);
-                scene.add(axesHelper);
-            }});
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {{
-                const width = window.innerWidth;
-                const height = window.innerHeight;
-                camera.aspect = width / height;
-                camera.updateProjectionMatrix();
-                renderer.setSize(width, height);
-            }});
-            
-            // Animation loop
-            function animate() {{
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }}
-            
-            animate();
-        </script>
-    </body>
-    </html>
-    """
+    # Extract directory from STL path to use as DICOM folder
+    dicom_folder = os.path.dirname(stl_path)
+    return new_generate_html_viewer(dicom_folder)

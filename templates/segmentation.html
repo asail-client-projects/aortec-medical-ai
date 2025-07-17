@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Segmentation | AORTEC</title>
+    <title>DICOM Processing | AORTEC</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/segmentation.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
         .hero {
-            background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}'); /* Add background image directly here */
+            background-image: url('{{ url_for("static", filename="images/hero-image-top.png") }}');
         }
         
-        /* Additional styles for folder-only warning */
+        /* Additional styles for DICOM viewer */
         .warning-message {
             color: #e74c3c;
             margin: 10px 0;
@@ -23,6 +23,233 @@
             border-left: 4px solid #e74c3c;
             border-radius: 4px;
         }
+        
+        .warning-container {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .warning-container .warning {
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .dicom-viewer-container {
+            background-color: #f8f9fa;
+            border: 2px solid #f9a826;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .viewer-summary {
+            margin-bottom: 20px;
+        }
+        
+        .viewer-info {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .info-item {
+            padding: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        
+        .viewer-actions {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .viewer-actions .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .viewer-actions .download-btn.primary {
+            background-color: #f9a826;
+            color: #1a1a1a;
+        }
+        
+        .viewer-actions .download-btn.primary:hover {
+            background-color: #e09515;
+        }
+        
+        .viewer-actions .download-btn.secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .viewer-actions .download-btn.secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .viewer-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .viewer-preview img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #f9a826;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .multi-view-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .multi-view-preview img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #f9a826;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .usage-instructions {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .usage-instructions h4 {
+            color: #f9a826;
+            margin-top: 0;
+        }
+        
+        .instruction-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .instruction-item {
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            border-left: 4px solid #f9a826;
+        }
+        
+        .processing-indicator {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f9a826;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing-note {
+            font-style: italic;
+            color: #666;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .preview-image-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .preview-note {
+            font-style: italic;
+            color: #666;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #f9a826;
+        }
+        
+        .feature-highlight {
+            background-color: #f0f8ff;
+            border: 1px solid #f9a826;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .feature-highlight h5 {
+            color: #f9a826;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .feature-highlight ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .feature-highlight li {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        /* Better responsive image handling */
+        .viewer-preview img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #f9a826;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .preview-image-container img {
+                max-width: 100% !important;
+                max-height: 400px !important;
+            }
+            
+            .viewer-actions {
+                flex-direction: column;
+            }
+            
+            .viewer-actions .download-btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .preview-image-container img {
+                max-width: 800px !important;
+                max-height: 600px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -31,9 +258,9 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <h1>Medical Image Segmentation</h1>
-        <p>Welcome to the medical image processing tool. <br/>
-            Here, you can convert DICOM files to images, apply segmentation, or generate a 3D model. Select a service below to begin.</p>
+        <h1>DICOM Processing Tools</h1>
+        <p>Welcome to the DICOM processing suite. <br/>
+            Convert DICOM files to images or create an interactive DICOM viewer with precise measurements. Select a service below to begin.</p>
     </section>
 
     <!-- Service Selection Section -->
@@ -43,12 +270,12 @@
             <div class="card" data-service="image_conversion">
                 <img src="{{ url_for('static', filename='images/extentions-par1.png') }}" alt="DICOM to Image Converter" class="card-image">
                 <h3>DICOM to Image Converter</h3>
-                <p>Convert DICOM files into standard image formats. Upload single files, multiple files, or entire folders.</p>
+                <p>Convert DICOM files into standard image formats (JPG/PNG). Perfect for creating viewable images from medical scans.</p>
             </div>
             <div class="card" data-service="model3D">
-                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="3D Model Generator" class="card-image">
-                <h3>3D Model Generator</h3>
-                <p>Generate a 3D model from a complete series of DICOM files and view it in STL format.</p>
+                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="DICOM Viewer" class="card-image">
+                <h3>DICOM Viewer with Measurements</h3>
+                <p>Create an interactive DICOM viewer with measurement rulers. Navigate through slices and make precise measurements in millimeters.</p>
             </div>
         </div>
     </section>

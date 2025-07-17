@@ -78,125 +78,86 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `,
 
-// Updated model3D service template
-model3D: `
-    <div class="service-form-container">
-        <h2>Advanced DICOM Visualization</h2>
-        <p>Generate detailed visualizations from your DICOM files to highlight structures of interest based on intensity thresholds.</p>
-        
-        <div class="upload-container">
-            <div class="upload-section">
-                <h3>Choose Processing Method</h3>
-                <div class="processing-method">
-                    <label>
-                        <input type="radio" name="processing_method" value="upload" checked> Upload Files
-                    </label>
-                    <label>
-                        <input type="radio" name="processing_method" value="local"> Use Local Directory
-                    </label>
+        // Updated model3D service template for DICOM viewer
+        model3D: `
+        <div class="service-form-container">
+            <h2>DICOM Viewer with Measurements</h2>
+            <p>Generate a comprehensive DICOM viewer with measurement rulers from your DICOM files. This tool provides precise measurements and navigation through your medical images.</p>
+            
+            <div class="upload-container">
+                <div class="upload-section">
+                    <h3>Choose Processing Method</h3>
+                    <div class="processing-method">
+                        <label>
+                            <input type="radio" name="processing_method" value="upload" checked> Upload Files
+                        </label>
+                        <label>
+                            <input type="radio" name="processing_method" value="local"> Use Local Directory
+                        </label>
+                    </div>
+                    
+                    <div id="upload-section" class="method-section">
+                        <h4>Upload Your DICOM Folder</h4>
+                        <form id="upload-form" data-service="3d_model" enctype="multipart/form-data">
+                            <label for="dicom-file">Choose a folder containing DICOM files</label>
+                            <input type="file" id="dicom-file" name="dicom_file" multiple required webkitdirectory directory>
+                            <div class="upload-options" style="display: none;">
+                                <label>
+                                    <input type="radio" name="upload_type" value="folder" checked> Select Folder
+                                </label>
+                            </div>
+                            <div class="warning-message">
+                                Note: For optimal viewing, please select a folder containing a complete DICOM series.
+                            </div>
+                            
+                            <button type="submit" class="submit-btn">Generate DICOM Viewer</button>
+                        </form>
+                        <p class="file-info">Supported formats: DICOM folder with multiple files</p>
+                    </div>
+                    
+                    <div id="local-section" class="method-section" style="display: none;">
+                        <h4>Use Local Directory</h4>
+                        <form id="local-form" data-service="3d_model">
+                            <label for="directory">Full path to DICOM directory:</label>
+                            <input type="text" id="directory" name="directory" class="form-control" required 
+                                   placeholder="e.g., D:\\path\\to\\dicom\\files">
+                            
+                            <button type="submit" class="submit-btn">Process Directory</button>
+                        </form>
+                        <p class="file-info">Enter the full path to a directory on the server that contains DICOM files</p>
+                    </div>
                 </div>
                 
-                <div id="upload-section" class="method-section">
-                    <h4>Upload Your DICOM Folder</h4>
-                    <form id="upload-form" data-service="3d_model" enctype="multipart/form-data">
-                        <label for="dicom-file">Choose a folder containing DICOM files</label>
-                        <input type="file" id="dicom-file" name="dicom_file" multiple required webkitdirectory directory>
-                        <div class="upload-options" style="display: none;">
-                            <label>
-                                <input type="radio" name="upload_type" value="folder" checked> Select Folder
-                            </label>
-                        </div>
-                        <div class="warning-message">
-                            Note: For optimal visualization, please select a folder containing a complete DICOM series.
-                        </div>
-                        
-                        <div class="advanced-options">
-                            <details>
-                                <summary>Advanced Options</summary>
-                                <div class="options-container">
-                                    <div class="option-row">
-                                        <label for="lower-threshold">Lower Threshold:</label>
-                                        <input type="number" id="lower-threshold" name="lower_threshold" 
-                                               placeholder="Auto" min="0" max="1000">
-                                        <span class="help-text">Default: Auto-detected</span>
-                                    </div>
-                                    <div class="option-row">
-                                        <label for="upper-threshold">Upper Threshold:</label>
-                                        <input type="number" id="upper-threshold" name="upper_threshold" 
-                                               placeholder="Auto" min="0" max="3000">
-                                        <span class="help-text">Default: Auto-detected</span>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn">Generate Visualization</button>
-                    </form>
-                    <p class="file-info">Supported formats: DICOM folder with a complete series</p>
-                </div>
-                
-                <div id="local-section" class="method-section" style="display: none;">
-                    <h4>Use Local Directory</h4>
-                    <form id="local-form" data-service="3d_model">
-                        <label for="directory">Full path to DICOM directory:</label>
-                        <input type="text" id="directory" name="directory" class="form-control" required 
-                               placeholder="e.g., D:\\path\\to\\dicom\\files">
-                        
-                        <div class="advanced-options">
-                            <details>
-                                <summary>Advanced Options</summary>
-                                <div class="options-container">
-                                    <div class="option-row">
-                                        <label for="local-lower-threshold">Lower Threshold:</label>
-                                        <input type="number" id="local-lower-threshold" name="lower_threshold" 
-                                               placeholder="Auto" min="0" max="1000">
-                                        <span class="help-text">Default: Auto-detected</span>
-                                    </div>
-                                    <div class="option-row">
-                                        <label for="local-upper-threshold">Upper Threshold:</label>
-                                        <input type="number" id="local-upper-threshold" name="upper_threshold" 
-                                               placeholder="Auto" min="0" max="3000">
-                                        <span class="help-text">Default: Auto-detected</span>
-                                    </div>
-                                </div>
-                            </details>
-                        </div>
-                        
-                        <button type="submit" class="submit-btn">Process Directory</button>
-                    </form>
-                    <p class="file-info">Enter the full path to a directory on the server that contains a complete series of DICOM files</p>
+                <div class="preview-section">
+                    <h3>Preview</h3>
+                    <div id="file-preview" class="preview-container">
+                        <p>No folder selected. Your uploaded folder information will be displayed here.</p>
+                    </div>
+                    <div class="info-box">
+                        <h4>What is the DICOM Viewer?</h4>
+                        <p>The DICOM viewer creates comprehensive medical image displays with measurement rulers, allowing for:</p>
+                        <ul>
+                            <li>Precise measurements in millimeters using built-in rulers</li>
+                            <li>Navigation through multiple DICOM slices</li>
+                            <li>Professional medical image viewing interface</li>
+                            <li>Interactive web-based viewer for easy access</li>
+                            <li>Multi-view displays showing different slices</li>
+                            <li>Pixel spacing information for accurate measurements</li>
+                        </ul>
+                        <p>Perfect for medical professionals, students, and researchers who need accurate measurements and clear visualization of medical images.</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="preview-section">
-                <h3>Preview</h3>
-                <div id="file-preview" class="preview-container">
-                    <p>No folder selected. Your uploaded folder information will be displayed here.</p>
-                </div>
-                <div class="info-box">
-                    <h4>What is the Advanced Visualization?</h4>
-                    <p>The DICOM visualization generator creates detailed views of your medical images, highlighting 
-                       important structures based on intensity values. This allows for:</p>
-                    <ul>
-                        <li>Detailed visualization of anatomical structures</li>
-                        <li>Clearer identification of regions of interest</li>
-                        <li>Better understanding of the scan's content</li>
-                        <li>Multiple perspectives of your DICOM data</li>
-                    </ul>
-                    <p>The output includes various views with structure highlighting based on threshold values.</p>
+            <div class="results-section">
+                <h3>Results</h3>
+                <div id="results-container" class="results-container">
+                    <p>DICOM viewer will appear here after processing. You can navigate through slices and make measurements.</p>
                 </div>
             </div>
+            <p class="processing-note">Note: DICOM viewer generation may take a few minutes depending on the number of files in your series.</p>
         </div>
-        
-        <div class="results-section">
-            <h3>Results</h3>
-            <div id="results-container" class="results-container">
-                <p>Visualization will appear here after processing. You can see different views of your DICOM data.</p>
-            </div>
-        </div>
-        <p class="processing-note">Note: Visualization generation may take a few minutes depending on the size and complexity of your data.</p>
-    </div>
-`
+    `
     };
 
     // Add click event to each card
