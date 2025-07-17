@@ -351,30 +351,6 @@ function handleFormSubmit(event) {
     const resultContainer = document.querySelector(".results-container");
     const formData = new FormData(form);
     
-    // For 3D model service, verify it's a folder upload
-    if (serviceType === "model3D" && data.output.endsWith('.stl')) {
-        resultHTML += `
-            <div class="model-info">
-                <h4>3D Model Generated Successfully</h4>
-                <p>Your DICOM series has been converted to a 3D STL model.</p>
-                
-                <div class="model-actions">
-                    <a href="${data.output}" class="download-btn" download>
-                        <i class="fas fa-download"></i> Download STL Model
-                    </a>
-                    <a href="/view_model/${data.output.split('/').pop()}" class="download-btn" target="_blank">
-                        <i class="fas fa-eye"></i> View 3D Model
-                    </a>
-                </div>
-                
-                <div class="model-stats">
-                    <p><strong>File Format:</strong> STL (3D Printable)</p>
-                    <p><strong>Compatible with:</strong> 3D viewers, CAD software, 3D printers</p>
-                </div>
-            </div>
-        `;
-    }
-    
     // Show loading message with progress animation
     resultContainer.innerHTML = `
         <div class="processing-indicator">
@@ -428,8 +404,97 @@ function handleFormSubmit(event) {
                     </div>
                 `;
                 resultContainer.innerHTML = resultHTML;
-            } else {
-                // Standard result display for other services
+            } 
+            // Handle 3D model results - SIMPLIFIED WITHOUT MULTIPLE FILES SECTION
+            else if (serviceType === "model3D" || serviceType === "3d_model") {
+                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+                
+                // Check if it's an STL file
+                if (data.output && data.output.endsWith('.stl')) {
+                    resultHTML += `
+                        <div class="stl-model-container">
+                            <div class="model-summary">
+                                <h4>3D STL Model Generated Successfully</h4>
+                                <p>Your DICOM series has been converted to a downloadable 3D STL model.</p>
+                                
+                                <div class="model-info">
+                                    <div class="info-item">
+                                        <strong>File Format:</strong> STL (Standard Tessellation Language)
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Compatible with:</strong> 3D viewers, CAD software, 3D printers
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Use cases:</strong> Medical visualization, 3D printing, research
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="model-actions">
+                                <a href="${data.output}" class="download-btn primary" download>
+                                    <i class="fas fa-download"></i> Download STL Model
+                                </a>
+                    `;
+                    
+                    // Add viewer button if viewer URL is available
+                    if (data.viewer_url) {
+                        resultHTML += `
+                                <a href="${data.viewer_url}" class="download-btn secondary" target="_blank">
+                                    <i class="fas fa-eye"></i> View 3D Model
+                                </a>
+                        `;
+                    }
+                    
+                    resultHTML += `
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add preview image if available
+                    const previewUrl = data.output.replace('.stl', '_preview.png');
+                    resultHTML += `
+                        <div class="model-preview">
+                            <h4>Model Preview</h4>
+                            <img src="${previewUrl}" alt="3D Model Preview" 
+                                 style="max-width: 100%; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                 onerror="this.style.display='none';">
+                        </div>
+                    `;
+                    
+                    // Add usage instructions
+                    resultHTML += `
+                        <div class="usage-instructions">
+                            <h4>How to Use Your STL Model</h4>
+                            <div class="instruction-grid">
+                                <div class="instruction-item">
+                                    <strong>3D Viewing:</strong> Use the "View 3D Model" button above or import into any STL viewer
+                                </div>
+                                <div class="instruction-item">
+                                    <strong>3D Printing:</strong> Import the STL file into your 3D printer software (Cura, PrusaSlicer, etc.)
+                                </div>
+                                <div class="instruction-item">
+                                    <strong>CAD Software:</strong> Open in Blender, MeshLab, or other 3D modeling applications
+                                </div>
+                                <div class="instruction-item">
+                                    <strong>Medical Analysis:</strong> Use in medical visualization software for further analysis
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // For non-STL 3D visualization results (PNG/JPG)
+                    resultHTML += `
+                        <div class="result-image">
+                            <img src="${data.output}" alt="3D Visualization">
+                        </div>
+                        <a href="${data.output}" class="download-btn" download>Download Visualization</a>
+                    `;
+                }
+                
+                resultContainer.innerHTML = resultHTML;
+            }
+            else {
+                // Standard result display for other services (like image conversion without ZIP)
                 let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
                 resultHTML += `
                     <div class="result-image">
@@ -438,21 +503,8 @@ function handleFormSubmit(event) {
                     <a href="${data.output}" class="download-btn" download>Download Result</a>
                 `;
                 
-                // If there are multiple files, show them all
-                if (data.all_outputs && data.all_outputs.length > 1) {
-                    resultHTML += `<h4>All Processed Files (${data.all_outputs.length}):</h4><div class="all-results">`;
-                    
-                    data.all_outputs.forEach(output => {
-                        resultHTML += `
-                            <div class="result-thumbnail">
-                                <img src="${output}" alt="Processed result">
-                                <a href="${output}" download>Download</a>
-                            </div>
-                        `;
-                    });
-                    
-                    resultHTML += `</div>`;
-                }
+                // REMOVED: Multiple files section that was showing thumbnails
+                // This section has been completely removed for cleaner interface
                 
                 resultContainer.innerHTML = resultHTML;
             }
@@ -467,6 +519,7 @@ function handleFormSubmit(event) {
         `;
     });
 }
+
 
 function handleLocalFormSubmit(event) {
     event.preventDefault();
