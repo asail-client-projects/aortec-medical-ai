@@ -1,3 +1,4 @@
+# Enhanced dicom_visualizer.py with navigation inspired by 3dModel.py
 import os
 import pydicom
 import numpy as np
@@ -9,11 +10,12 @@ import base64
 import io
 from PIL import Image
 import json
+import re
 
 class WebDicomViewer:
     """
-    Web-compatible version of the DICOM viewer that generates images and data 
-    for web display instead of using tkinter GUI
+    Enhanced web-compatible DICOM viewer with navigation functionality 
+    inspired by 3dModel.py tkinter implementation
     """
     
     def __init__(self, dicom_folder):
@@ -23,11 +25,12 @@ class WebDicomViewer:
         self.load_dicom_files()
     
     def load_dicom_files(self):
-        """Load all DICOM files from the folder - same logic as 3dModel.py"""
+        """Load and sort DICOM files by name (inspired by 3dModel.py sorting)"""
         files = []
         for root, _, filenames in os.walk(self.dicom_folder):
             for filename in filenames:
                 filepath = os.path.join(root, filename)
+                # Same logic as 3dModel.py: .dcm files or files without extension
                 if filename.lower().endswith('.dcm') or '.' not in filename:
                     try:
                         # Test if it's a valid DICOM file
@@ -36,39 +39,46 @@ class WebDicomViewer:
                     except:
                         continue
         
-        # Sort files by instance number or filename - same as 3dModel.py
+        # Sort files by name first, then by instance number like 3dModel.py
+        files.sort(key=lambda f: os.path.basename(f))
+        
+        # Further sort by DICOM properties if available
         self.image_paths = sorted(files, key=self._get_sort_key)
         
         if not self.image_paths:
             raise ValueError("No DICOM files found in the specified folder.")
     
     def _get_sort_key(self, filepath):
-        """Get sorting key for DICOM files - same as 3dModel.py"""
+        """Get sorting key for DICOM files - enhanced version"""
         try:
             ds = pydicom.dcmread(filepath, stop_before_pixels=True)
+            # Try multiple sorting criteria
             if hasattr(ds, 'InstanceNumber'):
-                return int(ds.InstanceNumber)
+                return (int(ds.InstanceNumber), os.path.basename(filepath))
             elif hasattr(ds, 'SliceLocation'):
-                return float(ds.SliceLocation)
+                return (float(ds.SliceLocation), os.path.basename(filepath))
+            elif hasattr(ds, 'ImagePositionPatient'):
+                # Use Z-coordinate for sorting
+                return (float(ds.ImagePositionPatient[2]), os.path.basename(filepath))
             else:
-                return os.path.basename(filepath)
+                return (0, os.path.basename(filepath))
         except:
-            return os.path.basename(filepath)
+            return (0, os.path.basename(filepath))
     
     def get_image_data(self, index):
-        """Get DICOM image data at specific index - same logic as 3dModel.py"""
+        """Get DICOM image data at specific index"""
         if 0 <= index < len(self.image_paths):
             return self._load_dicom_image(self.image_paths[index])
         return None
     
     def _load_dicom_image(self, filepath):
-        """Load a single DICOM image - same as 3dModel.py"""
+        """Load a single DICOM image - same logic as 3dModel.py"""
         try:
             ds = pydicom.dcmread(filepath)
             if not hasattr(ds, 'pixel_array'):
                 raise ValueError(f"File {filepath} has no pixel data.")
             
-            # Use pixel_array directly like the original
+            # Use pixel_array directly like 3dModel.py
             pixel_array = ds.pixel_array
             
             # Handle multi-frame if necessary
@@ -91,11 +101,11 @@ class WebDicomViewer:
     
     def create_viewer_image_web(self, index=None, save_path=None):
         """
-        Create a viewer image with ruler exactly like 3dModel.py but for web display
-        Returns base64 encoded image data or saves to file
+        Create a viewer image with ruler exactly like 3dModel.py 
+        but optimized for web display
         """
         if index is None:
-            index = len(self.image_paths) // 2  # Use middle image
+            index = 0  # Start from first image like 3dModel.py
         
         dicom_data = self.get_image_data(index)
         if not dicom_data:
@@ -104,30 +114,30 @@ class WebDicomViewer:
         img = dicom_data['image']
         ds = dicom_data['dataset']
         
-        # Create matplotlib figure with same size as original (8,8)
+        # Create matplotlib figure - same size as 3dModel.py
         fig, ax = plt.subplots(figsize=(8, 8))
         fig.patch.set_facecolor('black')
         
-        # Display the image EXACTLY like the original
+        # Display the image exactly like 3dModel.py: ax.imshow(img, cmap='gray')
         ax.imshow(img, cmap='gray')
         
-        # Add ruler with exact same parameters as original
+        # Add ruler with exact same logic as 3dModel.py
         self._draw_ruler_web(ax, img.shape, ds)
         
-        # Remove axes exactly like original
+        # Remove axes exactly like 3dModel.py
         ax.axis('off')
         
-        # Add title with slice information
+        # Add title with slice information (inspired by 3dModel.py navigation)
         title = f"AORTEC DICOM Viewer - Image {index + 1} of {len(self.image_paths)}"
         fig.suptitle(title, color='white', fontsize=14, y=0.95)
         
-        # Add image info in bottom left like original
+        # Add image info like 3dModel.py
         info_text = self._get_image_info(ds)
         fig.text(0.02, 0.02, info_text, color='white', fontsize=8, 
                 verticalalignment='bottom', bbox=dict(boxstyle="round,pad=0.2", 
                 facecolor='black', alpha=0.7))
         
-        # Use tight_layout like original
+        # Use tight_layout like 3dModel.py
         fig.tight_layout()
         
         if save_path:
@@ -147,40 +157,40 @@ class WebDicomViewer:
             return f"data:image/png;base64,{image_base64}"
     
     def _draw_ruler_web(self, ax, shape, ds):
-        """Draw ruler on the image exactly like 3dModel.py"""
+        """Draw ruler exactly like 3dModel.py draw_ruler method"""
         height, width = shape[:2]
         
-        # Get pixel spacing exactly like original
+        # Get pixel spacing exactly like 3dModel.py
         pixel_spacing_mm = 1.0
         if hasattr(ds, 'PixelSpacing'):
             pixel_spacing_mm = float(ds.PixelSpacing[0])
         
-        # Ruler parameters exactly like original
+        # Ruler parameters exactly like 3dModel.py
         major_tick_mm = 50
         minor_tick_mm = 10
         ruler_margin_px = 30
         
-        # Calculate ruler dimensions exactly like original
+        # Calculate ruler dimensions exactly like 3dModel.py
         v_ruler_pixels = height - 2 * ruler_margin_px
         v_ruler_mm = v_ruler_pixels * pixel_spacing_mm
         
         h_ruler_pixels = width - 2 * ruler_margin_px
         h_ruler_mm = h_ruler_pixels * pixel_spacing_mm
         
-        # Vertical ruler position exactly like original
+        # Vertical ruler position exactly like 3dModel.py
         v_x = width - ruler_margin_px
         v_y_bottom = height - ruler_margin_px
         v_y_top = v_y_bottom - v_ruler_pixels
         
-        # Horizontal ruler position exactly like original
+        # Horizontal ruler position exactly like 3dModel.py
         h_x_right = v_x
         h_x_left = v_x - h_ruler_pixels
         h_y = v_y_bottom
         
-        # Draw vertical ruler exactly like original
+        # Draw vertical ruler exactly like 3dModel.py
         ax.plot([v_x, v_x], [v_y_bottom, v_y_top], color='yellow', linewidth=2)
         
-        # Vertical ruler ticks exactly like original
+        # Vertical ruler ticks exactly like 3dModel.py
         for mm in range(0, int(v_ruler_mm) + 1, major_tick_mm):
             y_pos = v_y_bottom - mm / pixel_spacing_mm
             ax.plot([v_x - 8, v_x + 8], [y_pos, y_pos], color='red', linewidth=2)
@@ -192,15 +202,15 @@ class WebDicomViewer:
             y_pos = v_y_bottom - mm / pixel_spacing_mm
             ax.plot([v_x - 4, v_x + 4], [y_pos, y_pos], color='red', linewidth=1)
         
-        # Vertical ruler label exactly like original
+        # Vertical ruler label exactly like 3dModel.py
         ax.text(v_x + 20, v_y_bottom - v_ruler_pixels / 2, f"{v_ruler_mm:.1f} mm",
                 color='yellow', rotation=90, fontsize=8, va='center',
                 bbox=dict(facecolor='black', alpha=0.5, pad=2))
         
-        # Draw horizontal ruler exactly like original
+        # Draw horizontal ruler exactly like 3dModel.py
         ax.plot([h_x_left, h_x_right], [h_y, h_y], color='yellow', linewidth=2)
         
-        # Horizontal ruler ticks exactly like original
+        # Horizontal ruler ticks exactly like 3dModel.py
         for mm in range(0, int(h_ruler_mm) + 1, major_tick_mm):
             x_pos = h_x_right - mm / pixel_spacing_mm
             ax.plot([x_pos, x_pos], [h_y - 8, h_y + 8], color='red', linewidth=2)
@@ -212,18 +222,18 @@ class WebDicomViewer:
             x_pos = h_x_right - mm / pixel_spacing_mm
             ax.plot([x_pos, x_pos], [h_y - 4, h_y + 4], color='red', linewidth=1)
         
-        # Horizontal ruler label exactly like original
+        # Horizontal ruler label exactly like 3dModel.py
         ax.text(h_x_right - h_ruler_pixels / 2, h_y + 25, f"{h_ruler_mm:.1f} mm",
                 color='yellow', fontsize=8, ha='center',
                 bbox=dict(facecolor='black', alpha=0.5, pad=2))
         
-        # Pixel spacing info exactly like original
+        # Pixel spacing info exactly like 3dModel.py
         ax.text(ruler_margin_px, ruler_margin_px,
                 f"Pixel Spacing: {pixel_spacing_mm:.2f} mm/pixel",
                 color='white', fontsize=8, weight='bold')
     
     def _get_image_info(self, ds):
-        """Get image information for display - same as 3dModel.py"""
+        """Get image information for display - same as 3dModel.py would show"""
         info = []
         
         if hasattr(ds, 'PatientName'):
@@ -241,15 +251,16 @@ class WebDicomViewer:
     
     def generate_interactive_html_viewer(self, output_path):
         """
-        Generate an HTML file with interactive DICOM viewer like 3dModel.py
-        but for web browsers with navigation buttons
+        Generate an HTML file with interactive DICOM viewer 
+        with navigation buttons like 3dModel.py (⬅️ Previous View / Next View ➡️)
         """
-        # Generate all images as base64
+        # Generate all images as base64 (starting from index 0)
         images_data = []
         for i in range(len(self.image_paths)):
             img_data = self.create_viewer_image_web(i)
             images_data.append(img_data)
         
+        # HTML template with navigation inspired by 3dModel.py
         html_content = f"""
         <!DOCTYPE html>
         <html lang="en">
@@ -283,6 +294,7 @@ class WebDicomViewer:
                     padding-bottom: 15px;
                 }}
                 .image-container {{
+                    position: relative;
                     text-align: center;
                     margin-bottom: 20px;
                     background-color: #000;
@@ -291,12 +303,46 @@ class WebDicomViewer:
                 }}
                 .dicom-image {{
                     max-width: 100%;
-                    max-height: 70vh;
+                    max-height: 60vh;
                     width: auto;
                     height: auto;
                     border: 2px solid #f9a826;
                     border-radius: 5px;
+                    object-fit: contain;
                 }}
+                /* Navigation buttons positioned like 3dModel.py */
+                .nav-btn {{
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background-color: rgba(249, 168, 38, 0.9);
+                    color: #1a1a1a;
+                    border: none;
+                    padding: 15px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    font-size: 16px;
+                    transition: all 0.3s ease;
+                    z-index: 10;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                }}
+                .nav-btn:hover {{
+                    background-color: rgba(224, 149, 21, 0.95);
+                    transform: translateY(-50%) scale(1.05);
+                }}
+                .nav-btn:disabled {{
+                    background-color: rgba(102, 102, 102, 0.5);
+                    cursor: not-allowed;
+                    transform: translateY(-50%);
+                }}
+                .prev-btn {{
+                    left: 10px;
+                }}
+                .next-btn {{
+                    right: 10px;
+                }}
+                /* Controls section - inspired by 3dModel.py button frame */
                 .controls {{
                     display: flex;
                     justify-content: center;
@@ -389,6 +435,10 @@ class WebDicomViewer:
                     .btn {{
                         width: 200px;
                     }}
+                    .nav-btn {{
+                        font-size: 14px;
+                        padding: 10px 15px;
+                    }}
                 }}
             </style>
         </head>
@@ -400,9 +450,13 @@ class WebDicomViewer:
                 </div>
                 
                 <div class="image-container">
+                    <!-- Navigation buttons positioned like 3dModel.py -->
+                    <button class="nav-btn prev-btn" id="prev-nav-btn" onclick="changeImage(-1)">⬅️</button>
                     <img id="dicom-image" class="dicom-image" src="{images_data[0]}" alt="DICOM Image">
+                    <button class="nav-btn next-btn" id="next-nav-btn" onclick="changeImage(1)">➡️</button>
                 </div>
                 
+                <!-- Additional controls like 3dModel.py buttons -->
                 <div class="controls">
                     <button class="btn" id="prev-btn" onclick="changeImage(-1)">⬅️ Previous View</button>
                     <button class="btn" id="next-btn" onclick="changeImage(1)">Next View ➡️</button>
@@ -422,13 +476,14 @@ class WebDicomViewer:
                 </div>
                 
                 <div class="instructions">
-                    <h3>How to Use the Viewer</h3>
+                    <h3>How to Use the Viewer (Inspired by 3dModel.py)</h3>
                     <ul>
-                        <li><strong>Navigation:</strong> Use the Previous/Next buttons or keyboard arrow keys</li>
+                        <li><strong>Navigation:</strong> Use the arrow buttons on the image or the Previous/Next buttons below</li>
+                        <li><strong>Keyboard:</strong> Use arrow keys ← → for quick navigation (like 3dModel.py)</li>
                         <li><strong>Measurements:</strong> Yellow rulers show precise measurements in millimeters</li>
                         <li><strong>Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)</li>
                         <li><strong>Pixel Spacing:</strong> Displayed in the top-left corner for accuracy</li>
-                        <li><strong>Medical Information:</strong> Patient and study details shown in the bottom-left</li>
+                        <li><strong>Sorting:</strong> Images are sorted by name and DICOM properties</li>
                     </ul>
                 </div>
             </div>
@@ -454,6 +509,8 @@ class WebDicomViewer:
                     // Update button states
                     document.getElementById('prev-btn').disabled = currentIndex === 0;
                     document.getElementById('next-btn').disabled = currentIndex === totalImages - 1;
+                    document.getElementById('prev-nav-btn').disabled = currentIndex === 0;
+                    document.getElementById('next-nav-btn').disabled = currentIndex === totalImages - 1;
                 }}
                 
                 function changeImage(direction) {{
@@ -464,7 +521,7 @@ class WebDicomViewer:
                     }}
                 }}
                 
-                // Keyboard navigation (matching original 3dModel.py functionality)
+                // Keyboard navigation exactly like 3dModel.py
                 document.addEventListener('keydown', function(event) {{
                     if (event.key === 'ArrowLeft') {{
                         event.preventDefault();
@@ -475,7 +532,7 @@ class WebDicomViewer:
                     }}
                 }});
                 
-                // Initialize the viewer
+                // Initialize the viewer (start from first image like 3dModel.py)
                 updateImage();
                 
                 // Add smooth transitions
@@ -502,47 +559,37 @@ class WebDicomViewer:
         return {
             'total_images': len(self.image_paths),
             'image_paths': self.image_paths,
-            'folder_path': self.dicom_folder
+            'folder_path': self.dicom_folder,
+            'sorted_by': 'name_and_dicom_properties'
         }
 
-
-# Add this function to the END of your dicom_visualizer.py file
-
+# Updated conversion function
 def convert_to_2d_model(dicom_folder, output_path, lower_threshold=None, upper_threshold=None):
     """
-    Convert DICOM folder to 2D model visualization.
-    This function creates a 2D visualization from DICOM files using the WebDicomViewer class.
-    
-    Args:
-        dicom_folder: Path to folder containing DICOM files
-        output_path: Path to save the output image
-        lower_threshold: Lower threshold for processing (not used in viewer)
-        upper_threshold: Upper threshold for processing (not used in viewer)
-        
-    Returns:
-        tuple: (main_output_path, [additional_outputs])
+    Convert DICOM folder to 2D model visualization with navigation.
+    Enhanced version inspired by 3dModel.py functionality.
     """
     try:
-        # Create the web viewer
+        # Create the enhanced web viewer
         viewer = WebDicomViewer(dicom_folder)
         
-        # Generate the main viewer image (middle slice)
-        middle_index = len(viewer.image_paths) // 2
-        main_output = viewer.create_viewer_image_web(middle_index, output_path)
+        # Generate the main viewer image (starting from first image like 3dModel.py)
+        main_output = viewer.create_viewer_image_web(0, output_path)  # Start from index 0
         
-        # Generate additional outputs (optional)
+        # Generate additional outputs
         additional_outputs = []
         
-        # Create a multi-view image
+        # Create a multi-view image showing multiple slices
         multi_output = output_path.replace('.png', '_multi.png')
         try:
-            # Create a simple grid of multiple views
             import matplotlib.pyplot as plt
             import numpy as np
             
             fig, axes = plt.subplots(2, 3, figsize=(15, 10))
             fig.patch.set_facecolor('black')
+            fig.suptitle('AORTEC DICOM Viewer - Multiple Views', color='white', fontsize=16)
             
+            # Show evenly spaced slices
             indices = np.linspace(0, len(viewer.image_paths) - 1, 6, dtype=int)
             
             for i, idx in enumerate(indices):
@@ -553,7 +600,7 @@ def convert_to_2d_model(dicom_folder, output_path, lower_threshold=None, upper_t
                 if dicom_data:
                     img = dicom_data['image']
                     axes[row, col].imshow(img, cmap='gray')
-                    axes[row, col].set_title(f"Slice {idx + 1}", color='white')
+                    axes[row, col].set_title(f"Slice {idx + 1}/{len(viewer.image_paths)}", color='white')
                     axes[row, col].axis('off')
             
             plt.tight_layout()
@@ -573,28 +620,26 @@ def convert_to_2d_model(dicom_folder, output_path, lower_threshold=None, upper_t
 
 def create_2d_model_from_dicom_folder(dicom_folder, output_path, lower_threshold=None, upper_threshold=None):
     """
-    Alternative function name that might be expected by some parts of the code.
+    Alternative function name for compatibility.
     """
     return convert_to_2d_model(dicom_folder, output_path, lower_threshold, upper_threshold)[0]
 
-# Integration function for model_converter.py
+# Integration function for web application
 def create_dicom_web_viewer(dicom_folder, output_path):
     """
-    Create a web-compatible DICOM viewer from your 3dModel.py logic
-    This replaces the STL generation in model_converter.py for DICOM viewing
+    Create a web-compatible DICOM viewer with navigation like 3dModel.py
     """
     try:
-        # Create the web viewer
+        # Create the enhanced viewer
         viewer = WebDicomViewer(dicom_folder)
         
         # Generate the interactive HTML viewer
         html_output = output_path.replace('.stl', '.html').replace('.png', '.html')
         viewer.generate_interactive_html_viewer(html_output)
         
-        # Also generate a preview image (middle slice)
-        middle_index = len(viewer.image_paths) // 2
+        # Also generate a preview image (first slice like 3dModel.py)
         preview_output = output_path.replace('.stl', '_preview.png').replace('.html', '_preview.png')
-        viewer.create_viewer_image_web(middle_index, preview_output)
+        viewer.create_viewer_image_web(0, preview_output)  # Start from first image
         
         return {
             'html_viewer': html_output,

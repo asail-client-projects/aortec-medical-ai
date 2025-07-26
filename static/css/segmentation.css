@@ -167,6 +167,154 @@ body {
     margin-top: 30px;
 }
 
+/* Results section image sizing */
+.results-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    min-height: 100px;
+    max-height: 80vh; /* Limit height to 80% of viewport */
+    overflow-y: auto; /* Add scrolling if needed */
+}
+
+.result-image {
+    text-align: center;
+    margin: 15px 0;
+    max-height: 60vh; /* Limit to 60% of viewport height */
+    overflow: hidden; /* Hide overflow */
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.result-image img {
+    max-width: 100%;
+    max-height: 60vh; /* Limit height to 60% of viewport */
+    height: auto;
+    width: auto;
+    object-fit: contain; /* Maintain aspect ratio */
+    border: 2px solid #f9a826;
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Specific styling for DICOM viewer results */
+.dicom-viewer-result {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dicom-viewer-result img {
+    max-width: 100%;
+    max-height: 65vh; /* Slightly higher for DICOM viewer */
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    border: 2px solid #f9a826;
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Download button styling */
+.download-btn {
+    background: #f9a826;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 24px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s ease;
+    display: inline-block;
+    text-decoration: none;
+    margin: 15px auto;
+    text-align: center;
+}
+
+.download-btn:hover {
+    background: #e67e22;
+    color: white;
+    text-decoration: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .result-image img,
+    .dicom-viewer-result img {
+        max-height: 50vh; /* Smaller on mobile */
+    }
+    
+    .results-container {
+        max-height: 70vh; /* Smaller container on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .result-image img,
+    .dicom-viewer-result img {
+        max-height: 40vh; /* Even smaller on very small screens */
+    }
+    
+    .results-container {
+        max-height: 60vh;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    .result-image img,
+    .dicom-viewer-result img {
+        max-height: 70vh; /* Larger on big screens */
+        max-width: 90%; /* But not too wide */
+    }
+}
+
+/* Additional utility classes */
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.image-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.image-info {
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 12px;
+    z-index: 10;
+}
+
+/* Fix for processing indicator */
+.processing-indicator {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin: 20px 0;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 /* Buttons */
 .submit-btn, .download-btn {
     background: #f9a826;

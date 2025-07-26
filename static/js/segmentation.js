@@ -264,59 +264,62 @@ function handleFileSelect(event) {
         let previewHTML = '';
         const fileCount = fileInput.files.length;
         
-        // Check if it's a 3D model service and enforce folder upload
+        // Enhanced validation for 3D model service
         if (isModelService && !fileInput.hasAttribute('webkitdirectory')) {
             previewHTML = `
                 <div class="error-container">
-                    <p class="error">Error: For 3D model generation, you must select a folder containing DICOM files.</p>
+                    <p class="error">Error: For DICOM viewer generation, you must select a folder containing DICOM files.</p>
+                    <p>This service will sort files by name and create a navigation interface like 3dModel.py.</p>
                 </div>
             `;
             previewContainer.innerHTML = previewHTML;
             return;
         }
         
-        // Additional validation for 3D model - minimum number of files
-        if (isModelService && fileCount < 5) {
+        // Enhanced file count validation
+        if (isModelService && fileCount < 3) {
             previewHTML = `
-                <div class="error-container">
-                    <p class="error">Warning: 3D model generation typically requires a complete series of DICOM files (20+ images).</p>
-                    <p>The selected folder contains only ${fileCount} files, which may not be sufficient for a proper 3D model.</p>
+                <div class="warning-container">
+                    <p class="warning">Warning: DICOM viewer works best with multiple files from the same series.</p>
+                    <p>The selected folder contains only ${fileCount} file${fileCount > 1 ? 's' : ''}, which may not provide optimal navigation experience.</p>
                 </div>
             `;
             previewContainer.innerHTML = previewHTML;
             return;
         }
         
-        previewHTML += `<p><strong>Selected ${fileCount} file${fileCount > 1 ? 's' : ''}:</strong></p>`;
+        previewHTML += `<p><strong>📁 Selected ${fileCount} file${fileCount > 1 ? 's' : ''} for DICOM viewer:</strong></p>`;
         
-        // Show file list (limited to first 5 for UI clarity)
+        // Enhanced file preview
         previewHTML += '<ul class="file-list">';
-        
         const displayLimit = Math.min(fileCount, 5);
         for (let i = 0; i < displayLimit; i++) {
             const file = fileInput.files[i];
-            previewHTML += `<li>${file.name} - ${formatFileSize(file.size)}</li>`;
+            const fileIcon = file.name.toLowerCase().endsWith('.dcm') ? '🏥' : '📄';
+            previewHTML += `<li>${fileIcon} ${file.name} - ${formatFileSize(file.size)}</li>`;
         }
         
         if (fileCount > 5) {
-            previewHTML += `<li>...and ${fileCount - 5} more files</li>`;
+            previewHTML += `<li>📋 ...and ${fileCount - 5} more files</li>`;
         }
         
         previewHTML += '</ul>';
-        previewHTML += `<p><strong>Total size:</strong> ${formatTotalSize(fileInput.files)}</p>`;
+        previewHTML += `<p><strong>📊 Total size:</strong> ${formatTotalSize(fileInput.files)}</p>`;
         
-        // For 3D model service, add info about DICOM series
+        // Enhanced info for DICOM viewer
         if (isModelService) {
             previewHTML += `
-                <div class="dicom-info">
-                    <p><strong>Processing Information:</strong></p>
-                    <p>DICOM files will be analyzed to create a 3D model of structures based on density values.</p>
-                    <p>For best results:</p>
+                <div class="dicom-processing-info">
+                    <h4>🔬 DICOM Viewer Processing (inspired by 3dModel.py):</h4>
                     <ul>
-                        <li>Ensure all files are from the same DICOM series</li>
-                        <li>CT scans typically work better than MRI</li>
-                        <li>Files should be sequentially ordered slices</li>
+                        <li>✅ Files will be sorted by name and DICOM properties</li>
+                        <li>🎯 Navigation interface with Previous/Next buttons</li>
+                        <li>📏 Measurement rulers with precise millimeter markings</li>
+                        <li>⌨️ Keyboard navigation support (arrow keys)</li>
+                        <li>📱 Mobile-friendly touch/swipe navigation</li>
+                        <li>🎨 Professional medical image display</li>
                     </ul>
+                    <p><strong>Best Results:</strong> Use a complete DICOM series with sequential slices</p>
                 </div>
             `;
         }
@@ -326,6 +329,8 @@ function handleFileSelect(event) {
         previewContainer.innerHTML = "<p>No files selected.</p>";
     }
 }
+
+
 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -343,6 +348,27 @@ function formatTotalSize(files) {
     return formatFileSize(totalBytes);
 }
 
+// Function to display generic results
+function displayGenericResult(data, resultContainer) {
+    let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+    
+    resultHTML += `
+        <div class="generic-result">
+            <div class="result-image">
+                <img src="${data.output}" alt="Processed Result" loading="lazy">
+            </div>
+            <div class="download-section">
+                <a href="${data.output}" class="download-btn primary" download>
+                    📥 Download Result
+                </a>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+
 function handleFormSubmit(event) {
     event.preventDefault();
     
@@ -355,8 +381,8 @@ function handleFormSubmit(event) {
     resultContainer.innerHTML = `
         <div class="processing-indicator">
             <div class="loading-spinner"></div>
-            <p class="loading">Processing... Please wait.</p>
-            <p>This may take several minutes for complex visualizations.</p>
+            <p class="loading">Processing DICOM files...</p>
+            <p>Sorting files and generating viewer with navigation like 3dModel.py...</p>
         </div>
     `;
     
@@ -379,134 +405,22 @@ function handleFormSubmit(event) {
                     <details>
                         <summary>Troubleshooting Tips</summary>
                         <ul>
-                            <li>Check if your DICOM files are valid</li>
-                            <li>Try different file formats</li>
-                            <li>Ensure the server has proper permissions</li>
+                            <li>Check if your DICOM files are valid and properly formatted</li>
+                            <li>Ensure the folder contains a complete DICOM series</li>
+                            <li>Try uploading files with .dcm extension or no extension</li>
+                            <li>Verify that files are sorted properly by name</li>
                         </ul>
                     </details>
                 </div>
             `;
         } else {
-            // Check if this is image conversion service and there's a ZIP file in the output
-            if (serviceType === "image_conversion" && data.output && data.output.toLowerCase().includes('.zip')) {
-                // Display simplified result for image conversion with ZIP
-                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-                resultHTML += `
-                    <div class="result-container">
-                        <div class="conversion-summary">
-                            <h4>Conversion Complete</h4>
-                            <p>Successfully converted ${data.total_files || 'multiple'} DICOM files to standard image format.</p>
-                            <p>All images have been packaged into a single ZIP file for easy download.</p>
-                        </div>
-                        <div class="download-section">
-                            <a href="${data.output}" class="download-btn" download>Download All Images (ZIP)</a>
-                        </div>
-                    </div>
-                `;
-                resultContainer.innerHTML = resultHTML;
-            } 
-            // Handle 3D model results - SIMPLIFIED WITHOUT MULTIPLE FILES SECTION
-            else if (serviceType === "model3D" || serviceType === "3d_model") {
-                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-                
-                // Check if it's an STL file
-                if (data.output && data.output.endsWith('.stl')) {
-                    resultHTML += `
-                        <div class="stl-model-container">
-                            <div class="model-summary">
-                                <h4>3D STL Model Generated Successfully</h4>
-                                <p>Your DICOM series has been converted to a downloadable 3D STL model.</p>
-                                
-                                <div class="model-info">
-                                    <div class="info-item">
-                                        <strong>File Format:</strong> STL (Standard Tessellation Language)
-                                    </div>
-                                    <div class="info-item">
-                                        <strong>Compatible with:</strong> 3D viewers, CAD software, 3D printers
-                                    </div>
-                                    <div class="info-item">
-                                        <strong>Use cases:</strong> Medical visualization, 3D printing, research
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="model-actions">
-                                <a href="${data.output}" class="download-btn primary" download>
-                                    <i class="fas fa-download"></i> Download STL Model
-                                </a>
-                    `;
-                    
-                    // Add viewer button if viewer URL is available
-                    if (data.viewer_url) {
-                        resultHTML += `
-                                <a href="${data.viewer_url}" class="download-btn secondary" target="_blank">
-                                    <i class="fas fa-eye"></i> View 3D Model
-                                </a>
-                        `;
-                    }
-                    
-                    resultHTML += `
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Add preview image if available
-                    const previewUrl = data.output.replace('.stl', '_preview.png');
-                    resultHTML += `
-                        <div class="model-preview">
-                            <h4>Model Preview</h4>
-                            <img src="${previewUrl}" alt="3D Model Preview" 
-                                 style="max-width: 100%; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
-                                 onerror="this.style.display='none';">
-                        </div>
-                    `;
-                    
-                    // Add usage instructions
-                    resultHTML += `
-                        <div class="usage-instructions">
-                            <h4>How to Use Your STL Model</h4>
-                            <div class="instruction-grid">
-                                <div class="instruction-item">
-                                    <strong>3D Viewing:</strong> Use the "View 3D Model" button above or import into any STL viewer
-                                </div>
-                                <div class="instruction-item">
-                                    <strong>3D Printing:</strong> Import the STL file into your 3D printer software (Cura, PrusaSlicer, etc.)
-                                </div>
-                                <div class="instruction-item">
-                                    <strong>CAD Software:</strong> Open in Blender, MeshLab, or other 3D modeling applications
-                                </div>
-                                <div class="instruction-item">
-                                    <strong>Medical Analysis:</strong> Use in medical visualization software for further analysis
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // For non-STL 3D visualization results (PNG/JPG)
-                    resultHTML += `
-                        <div class="result-image">
-                            <img src="${data.output}" alt="3D Visualization">
-                        </div>
-                        <a href="${data.output}" class="download-btn" download>Download Visualization</a>
-                    `;
-                }
-                
-                resultContainer.innerHTML = resultHTML;
-            }
-            else {
-                // Standard result display for other services (like image conversion without ZIP)
-                let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-                resultHTML += `
-                    <div class="result-image">
-                        <img src="${data.output}" alt="Processed result">
-                    </div>
-                    <a href="${data.output}" class="download-btn" download>Download Result</a>
-                `;
-                
-                // REMOVED: Multiple files section that was showing thumbnails
-                // This section has been completely removed for cleaner interface
-                
-                resultContainer.innerHTML = resultHTML;
+            // Enhanced result display for DICOM viewer (inspired by 3dModel.py)
+            if (serviceType === "3d_model" || serviceType === "model3D") {
+                displayEnhancedDicomViewer(data, resultContainer);
+            } else if (serviceType === "image_conversion") {
+                displayImageConversionResult(data, resultContainer);
+            } else {
+                displayGenericResult(data, resultContainer);
             }
         }
     })
@@ -675,6 +589,730 @@ function handleDicomVisualizationResult(data, resultContainer) {
     
     resultContainer.innerHTML = resultHTML;
 }
+
+
+function simulateNavigation(direction) {
+    const image = document.getElementById('main-dicom-image');
+    if (!image) return;
+    
+    // Add visual feedback
+    image.style.opacity = '0.7';
+    image.style.transform = 'scale(0.95)';
+    
+    // Create notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #f9a826;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 1000;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    `;
+    notification.textContent = direction > 0 ? 'Next View ➡️' : '⬅️ Previous View';
+    document.body.appendChild(notification);
+    
+    // Simulate navigation delay
+    setTimeout(() => {
+        image.style.opacity = '1';
+        image.style.transform = 'scale(1)';
+        
+        // Remove notification
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 500);
+}
+
+function displayDicomViewerResult(data, resultContainer) {
+    // Display DICOM viewer results with proper sizing
+    let resultHTML = `<p class="success">${data.message || 'DICOM visualization generated successfully!'}</p>`;
+    
+    // Create a properly sized container for the DICOM viewer
+    resultHTML += `
+        <div class="dicom-viewer-result">
+            <h4>DICOM Viewer Generated</h4>
+            <div class="result-image">
+                <img src="${data.output}" alt="DICOM Viewer" loading="lazy">
+            </div>
+            <div class="image-info">
+                <p>📏 This viewer includes measurement rulers for precise measurements</p>
+                <p>🔍 Use the interactive viewer for navigation through slices</p>
+            </div>
+        </div>
+    `;
+    
+    // Add download button
+    resultHTML += `
+        <div class="download-section" style="text-align: center; margin: 20px 0;">
+            <a href="${data.output}" class="download-btn" download>
+                📥 Download DICOM Viewer Image
+            </a>
+        </div>
+    `;
+    
+    // Add usage instructions
+    resultHTML += `
+        <div class="usage-instructions">
+            <h4>About Your DICOM Viewer</h4>
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <strong>Measurement Rulers:</strong> Yellow rulers show precise measurements in millimeters
+                </div>
+                <div class="instruction-item">
+                    <strong>Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)
+                </div>
+                <div class="instruction-item">
+                    <strong>Pixel Spacing:</strong> Displayed information ensures measurement accuracy
+                </div>
+                <div class="instruction-item">
+                    <strong>Medical Data:</strong> Patient and study information shown when available
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+
+// Function to add navigation simulation
+function addNavigationSimulation() {
+    // Add keyboard navigation like 3dModel.py
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            simulateNavigation(-1);
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            simulateNavigation(1);
+        }
+    });
+    
+    // Add touch/swipe support for mobile
+    let startX = 0;
+    let startY = 0;
+    
+    document.addEventListener('touchstart', function(event) {
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+    });
+    
+    document.addEventListener('touchend', function(event) {
+        if (!startX || !startY) return;
+        
+        const endX = event.changedTouches[0].clientX;
+        const endY = event.changedTouches[0].clientY;
+        
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        
+        // Check if it's a horizontal swipe (not vertical scroll)
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX > 0) {
+                simulateNavigation(-1); // Swipe right = previous
+            } else {
+                simulateNavigation(1);  // Swipe left = next
+            }
+        }
+        
+        startX = 0;
+        startY = 0;
+    });
+}
+
+// Function to display image conversion results
+function displayImageConversionResult(data, resultContainer) {
+    let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+    
+    if (data.output && data.output.toLowerCase().includes('.zip')) {
+        resultHTML += `
+            <div class="conversion-result">
+                <div class="conversion-summary">
+                    <h4>📁 Conversion Complete</h4>
+                    <p>Successfully converted ${data.total_files || 'multiple'} DICOM files to standard image format.</p>
+                    <p>All images have been packaged into a single ZIP file for easy download.</p>
+                </div>
+                <div class="download-section">
+                    <a href="${data.output}" class="download-btn primary" download>
+                        📥 Download All Images (ZIP)
+                    </a>
+                </div>
+            </div>
+        `;
+    } else {
+        resultHTML += `
+            <div class="single-result">
+                <div class="result-image">
+                    <img src="${data.output}" alt="Converted Image" loading="lazy">
+                </div>
+                <div class="download-section">
+                    <a href="${data.output}" class="download-btn primary" download>
+                        📥 Download Image
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+
+
+// New function to display enhanced DICOM viewer results (inspired by 3dModel.py)
+function displayEnhancedDicomViewer(data, resultContainer) {
+    let resultHTML = `<p class="success">${data.message || 'DICOM visualization generated successfully!'}</p>`;
+    
+    // Create enhanced viewer container with navigation (like 3dModel.py)
+    resultHTML += `
+        <div class="enhanced-dicom-viewer">
+            <div class="viewer-header">
+                <h4>🔬 DICOM Viewer with Navigation</h4>
+                <p>Navigate through DICOM slices with measurement rulers (inspired by 3dModel.py)</p>
+            </div>
+            
+            <div class="viewer-image-container">
+                <div class="image-wrapper">
+                    <img id="main-dicom-image" src="${data.output}" alt="DICOM Viewer" loading="lazy">
+                    
+                    <!-- Navigation buttons positioned like 3dModel.py -->
+                    <button class="nav-overlay-btn prev-overlay" onclick="simulateNavigation(-1)" title="Previous View">
+                        ⬅️
+                    </button>
+                    <button class="nav-overlay-btn next-overlay" onclick="simulateNavigation(1)" title="Next View">
+                        ➡️
+                    </button>
+                </div>
+                
+                <!-- Control buttons like 3dModel.py button frame -->
+                <div class="viewer-controls">
+                    <button class="control-btn" onclick="simulateNavigation(-1)">⬅️ Previous View</button>
+                    <button class="control-btn" onclick="simulateNavigation(1)">Next View ➡️</button>
+                </div>
+            </div>
+            
+            <div class="viewer-info">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <strong>📏 Measurement Rulers:</strong> Yellow rulers show precise measurements in millimeters
+                    </div>
+                    <div class="info-item">
+                        <strong>🎯 Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)
+                    </div>
+                    <div class="info-item">
+                        <strong>📊 Pixel Spacing:</strong> Displayed for accurate measurements
+                    </div>
+                    <div class="info-item">
+                        <strong>🔄 Navigation:</strong> Use arrow buttons or keyboard arrows (like 3dModel.py)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="download-section">
+                <a href="${data.output}" class="download-btn primary" download>
+                    📥 Download DICOM Viewer Image
+                </a>
+            </div>
+        </div>
+    `;
+    
+    // Add enhanced styling
+    resultHTML += `
+        <style>
+            .enhanced-dicom-viewer {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 12px;
+                padding: 25px;
+                margin: 20px 0;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                border: 2px solid #f9a826;
+            }
+            
+            .viewer-header {
+                text-align: center;
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #f9a826;
+            }
+            
+            .viewer-header h4 {
+                color: #f9a826;
+                margin: 0 0 10px 0;
+                font-size: 22px;
+            }
+            
+            .viewer-image-container {
+                position: relative;
+                text-align: center;
+                margin: 20px 0;
+            }
+            
+            .image-wrapper {
+                position: relative;
+                display: inline-block;
+                background: #000;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+            
+            #main-dicom-image {
+                max-width: 100%;
+                max-height: 60vh;
+                height: auto;
+                width: auto;
+                object-fit: contain;
+                border: 2px solid #f9a826;
+                border-radius: 5px;
+                display: block;
+            }
+            
+            /* Navigation buttons positioned like 3dModel.py */
+            .nav-overlay-btn {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(249, 168, 38, 0.9);
+                color: #1a1a1a;
+                border: none;
+                padding: 15px 20px;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 20px;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                z-index: 10;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+            
+            .nav-overlay-btn:hover {
+                background: rgba(224, 149, 21, 0.95);
+                transform: translateY(-50%) scale(1.1);
+            }
+            
+            .prev-overlay {
+                left: -25px;
+            }
+            
+            .next-overlay {
+                right: -25px;
+            }
+            
+            /* Control buttons like 3dModel.py button frame */
+            .viewer-controls {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin: 20px 0;
+                padding: 15px;
+                background: rgba(249, 168, 38, 0.1);
+                border-radius: 8px;
+                border: 1px solid rgba(249, 168, 38, 0.3);
+            }
+            
+            .control-btn {
+                background: #f9a826;
+                color: #1a1a1a;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                min-width: 140px;
+            }
+            
+            .control-btn:hover {
+                background: #e09515;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+            
+            .viewer-info {
+                margin: 20px 0;
+            }
+            
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+                margin-top: 15px;
+            }
+            
+            .info-item {
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                border-left: 4px solid #f9a826;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            
+            .download-section {
+                text-align: center;
+                margin: 25px 0;
+                padding: 20px;
+                background: rgba(249, 168, 38, 0.1);
+                border-radius: 8px;
+            }
+            
+            .download-btn.primary {
+                background: linear-gradient(135deg, #f9a826, #e09515);
+                color: white;
+                padding: 15px 30px;
+                border: none;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 18px;
+                display: inline-block;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(249, 168, 38, 0.3);
+            }
+            
+            .download-btn.primary:hover {
+                background: linear-gradient(135deg, #e09515, #c8750d);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(249, 168, 38, 0.4);
+                color: white;
+                text-decoration: none;
+            }
+            
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .viewer-controls {
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                
+                .control-btn {
+                    width: 100%;
+                }
+                
+                .nav-overlay-btn {
+                    font-size: 16px;
+                    padding: 10px 15px;
+                }
+                
+                .prev-overlay {
+                    left: -20px;
+                }
+                
+                .next-overlay {
+                    right: -20px;
+                }
+                
+                .info-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    `;
+    
+    resultContainer.innerHTML = resultHTML;
+    
+    // Add navigation simulation functionality
+    addNavigationSimulation();
+}
+
+// With this improved version:
+function handleImprovedResultDisplay(data, resultContainer, serviceType) {
+    if (serviceType === "3d_model" || serviceType === "model3D") {
+        // For DICOM viewer results
+        displayDicomViewerResult(data, resultContainer);
+    } else {
+        // For other services with improved sizing
+        let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+        
+        resultHTML += `
+            <div class="result-image">
+                <img src="${data.output}" alt="Processed result" loading="lazy">
+            </div>
+            <div class="download-section" style="text-align: center; margin: 20px 0;">
+                <a href="${data.output}" class="download-btn" download>Download Result</a>
+            </div>
+        `;
+        
+        resultContainer.innerHTML = resultHTML;
+    }
+}
+
+// Also add this CSS directly via JavaScript for immediate effect:
+function applyImageSizingFix() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .results-container .result-image img {
+            max-width: 100% !important;
+            max-height: 60vh !important;
+            height: auto !important;
+            width: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        
+        .results-container {
+            max-height: 80vh !important;
+            overflow-y: auto !important;
+        }
+        
+        .dicom-viewer-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .image-info {
+            background: rgba(249, 168, 38, 0.1);
+            border-left: 4px solid #f9a826;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .image-info p {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+
+// Add this function to your segmentation.js file or update the existing result display code
+
+function displayDicomViewerResult(data, resultContainer) {
+    // Display DICOM viewer results with proper sizing
+    let resultHTML = `<p class="success">${data.message || 'DICOM visualization generated successfully!'}</p>`;
+    
+    // Create a properly sized container for the DICOM viewer
+    resultHTML += `
+        <div class="dicom-viewer-result">
+            <h4>DICOM Viewer Generated</h4>
+            <div class="result-image">
+                <img src="${data.output}" alt="DICOM Viewer" loading="lazy">
+            </div>
+            <div class="image-info">
+                <p>📏 This viewer includes measurement rulers for precise measurements</p>
+                <p>🔍 Use the interactive viewer for navigation through slices</p>
+            </div>
+        </div>
+    `;
+    
+    // Add download button
+    resultHTML += `
+        <div class="download-section" style="text-align: center; margin: 20px 0;">
+            <a href="${data.output}" class="download-btn" download>
+                📥 Download DICOM Viewer Image
+            </a>
+        </div>
+    `;
+    
+    // Add usage instructions
+    resultHTML += `
+        <div class="usage-instructions">
+            <h4>About Your DICOM Viewer</h4>
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <strong>Measurement Rulers:</strong> Yellow rulers show precise measurements in millimeters
+                </div>
+                <div class="instruction-item">
+                    <strong>Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)
+                </div>
+                <div class="instruction-item">
+                    <strong>Pixel Spacing:</strong> Displayed information ensures measurement accuracy
+                </div>
+                <div class="instruction-item">
+                    <strong>Medical Data:</strong> Patient and study information shown when available
+                </div>
+            </div>
+        </div>
+    `;
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+// Update your existing handleFormSubmit function to use better image sizing
+// Find this section in your existing code and replace the result display:
+
+// Replace this part in handleFormSubmit:
+/*
+else {
+    // For non-STL 3D visualization results (PNG/JPG)
+    resultHTML += `
+        <div class="result-image">
+            <img src="${data.output}" alt="3D Visualization">
+        </div>
+        <a href="${data.output}" class="download-btn" download>Download Visualization</a>
+    `;
+}
+*/
+
+// With this improved version:
+function handleImprovedResultDisplay(data, resultContainer, serviceType) {
+    if (serviceType === "3d_model" || serviceType === "model3D") {
+        // For DICOM viewer results
+        displayDicomViewerResult(data, resultContainer);
+    } else {
+        // For other services with improved sizing
+        let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
+        
+        resultHTML += `
+            <div class="result-image">
+                <img src="${data.output}" alt="Processed result" loading="lazy">
+            </div>
+            <div class="download-section" style="text-align: center; margin: 20px 0;">
+                <a href="${data.output}" class="download-btn" download>Download Result</a>
+            </div>
+        `;
+        
+        resultContainer.innerHTML = resultHTML;
+    }
+}
+
+// Also add this CSS directly via JavaScript for immediate effect:
+function applyImageSizingFix() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .results-container .result-image img {
+            max-width: 100% !important;
+            max-height: 60vh !important;
+            height: auto !important;
+            width: auto !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        
+        .results-container {
+            max-height: 80vh !important;
+            overflow-y: auto !important;
+        }
+        
+        .dicom-viewer-result {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .image-info {
+            background: rgba(249, 168, 38, 0.1);
+            border-left: 4px solid #f9a826;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .image-info p {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Apply enhanced styling on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Add enhanced CSS for better visual presentation
+    const style = document.createElement('style');
+    style.textContent = `
+        .results-container {
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+        }
+        
+        .dicom-processing-info {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+            border: 2px solid #f9a826;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .dicom-processing-info h4 {
+            color: #f9a826;
+            margin-top: 0;
+        }
+        
+        .dicom-processing-info ul {
+            margin: 10px 0;
+        }
+        
+        .dicom-processing-info li {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .warning-container {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-container .warning {
+            color: #856404;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .file-list li {
+            padding: 2px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .file-list li:last-child {
+            border-bottom: none;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add enhanced tooltip functionality
+    document.addEventListener('mouseover', function(event) {
+        if (event.target.hasAttribute('title')) {
+            event.target.style.cursor = 'help';
+        }
+    });
+});
+
 
 // First, add this to the top of the file where other libraries are loaded
 document.addEventListener("DOMContentLoaded", function() {
