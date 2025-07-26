@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Document</title>
 </head>
 <body>
@@ -12,30 +13,38 @@
       <div>
           <h1>AORTEC.</h1>
       </div>
-  </div>
-  
-  <nav>
-    <ul>
-        <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
-        <li><a href="{{ url_for('about') }}" class="{% if request.path == '/about' %}active{% endif %}">About</a></li>
-        <li><a href="{{ url_for('segmentation') }}" class="{% if request.path == '/segmentation' %}active{% endif %}">Segmentation</a></li>
-        <li><a href="{{ url_for('extensions') }}" class="{% if request.path == '/extensions' %}active{% endif %}">Extensions</a></li>
-        <li><a href="{{ url_for('tutorials') }}" class="{% if request.path == '/tutorials' %}active{% endif %}">Tutorials</a></li>
-        <li><a href="{{ url_for('contact') }}" class="{% if request.path == '/contact' %}active{% endif %}">Contact</a></li>
-    </ul>
-</nav>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav">
+      <ul>
+          <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('about') }}" class="{% if request.path == '/about' %}active{% endif %}">About</a></li>
+          <li><a href="{{ url_for('segmentation') }}" class="{% if request.path == '/segmentation' %}active{% endif %}">Segmentation</a></li>
+          <li><a href="{{ url_for('extensions') }}" class="{% if request.path == '/extensions' %}active{% endif %}">Extensions</a></li>
+          <li><a href="{{ url_for('tutorials') }}" class="{% if request.path == '/tutorials' %}active{% endif %}">Tutorials</a></li>
+          <li><a href="{{ url_for('contact') }}" class="{% if request.path == '/contact' %}active{% endif %}">Contact</a></li>
+      </ul>
+    </nav>
 
-    <!-- <div class="nav-icons">
-        <button class="icon-btn" title="Login">
-            <i class="fas fa-user"></i>
-        </button>
-        <button class="icon-btn" title="Change Language">
-            <i class="fas fa-globe"></i>
-        </button>
-        <button class="icon-btn" title="Search">
-            <i class="fas fa-search"></i>
-        </button>
-      </div>  -->
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
   </header>
+
+  <!-- Mobile Navigation Menu -->
+  <div class="mobile-nav" id="mobile-nav">
+      <ul>
+          <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+          <li><a href="{{ url_for('about') }}" class="{% if request.path == '/about' %}active{% endif %}">About</a></li>
+          <li><a href="{{ url_for('segmentation') }}" class="{% if request.path == '/segmentation' %}active{% endif %}">Segmentation</a></li>
+          <li><a href="{{ url_for('extensions') }}" class="{% if request.path == '/extensions' %}active{% endif %}">Extensions</a></li>
+          <li><a href="{{ url_for('tutorials') }}" class="{% if request.path == '/tutorials' %}active{% endif %}">Tutorials</a></li>
+          <li><a href="{{ url_for('contact') }}" class="{% if request.path == '/contact' %}active{% endif %}">Contact</a></li>
+      </ul>
+  </div>
 </body>
 </html>
