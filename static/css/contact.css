@@ -27,96 +27,243 @@ body {
     font-size: 16px;
 }
 
-/* Contact Section */
+/* Contact Container */
 .contact-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    max-width: 1000px;
+    margin: 0 auto;
     padding: 40px 20px;
+}
+
+.team-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 1.8rem;
+    color: #06051D;
+    margin-bottom: 30px;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.team-card {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-3px);
+}
+
+.team-card.medical {
+    border-top: 4px solid #2c3e50;
+}
+
+.team-card.developer {
+    border-top: 4px solid #f9a826;
+}
+
+/* Card Content Layout */
+.card-content {
+    display: flex;
+    align-items: center;
     gap: 30px;
-    max-width: 1200px;
-    margin: auto;
 }
 
-.contact-form, .contact-details {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    flex: 1 1 45%;
-    min-width: 300px;
+.profile-image {
+    flex-shrink: 0;
 }
 
-.contact-form h2, .contact-details h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #f9a826;
+.profile-image img {
+    width: 90%;
+    height: 90%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f9a826;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-.contact-form label {
-    display: block;
-    margin-bottom: 5px;
+.medical .profile-image img {
+    border-color: #2c3e50;
+}
+
+.profile-info {
+    flex: 1;
+    text-align: left;
+}
+
+.person-name {
+    font-size: 1.2rem;
     font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 5px;
 }
 
-.contact-form input, .contact-form textarea {
-    width: 100%;
-    padding: 10px;
+.person-role {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.person-affiliation {
+    color: #95a5a6;
+    font-size: 0.85rem;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
+    font-style: italic;
 }
 
-.contact-form button {
-    background-color: #f9a826;
+.contact-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f9a826;
     color: white;
+    padding: 8px 16px;
     border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
-.contact-form button:hover {
-    background-color: #d48821;
-}
-
-.contact-details p {
-    font-size: 16px;
-    margin-bottom: 10px;
-}
-
-.contact-details p i {
-    margin-right: 10px;
-    color: #f9a826;
-}
-
-.contact-details a {
-    color: #333;
+.contact-button:hover {
+    background: #e67e22;
+    transform: translateY(-2px);
+    color: white;
     text-decoration: none;
 }
 
-.contact-details a:hover {
-    text-decoration: underline;
+.contact-button.small {
+    padding: 8px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    font-size: 0.9rem;
+    gap: 0;
 }
 
-.map-container iframe {
-    width: 100%;
-    height: 300px;
-    border: none;
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.contact-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.social-icons a {
-    font-size: 20px;
-    color: #333;
-    margin-right: 15px;
-    transition: color 0.3s;
+.contact-button.small:nth-child(1) {
+    background: #e74c3c; /* Email - Red */
 }
 
-.social-icons a:hover {
-    color: #f9a826;
+.contact-button.small:nth-child(1):hover {
+    background: #c0392b;
+}
+
+.contact-button.small:nth-child(2) {
+    background: #0077b5; /* LinkedIn - Blue */
+}
+
+.contact-button.small:nth-child(2):hover {
+    background: #005885;
+}
+
+.contact-button.small:nth-child(3) {
+    background: #333; /* GitHub - Dark */
+}
+
+.contact-button.small:nth-child(3):hover {
+    background: #24292e;
+}
+
+.contact-button.small:nth-child(4) {
+    background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); /* Instagram - Gradient */
+}
+
+.contact-button.small:nth-child(4):hover {
+    transform: translateY(-2px) scale(1.1);
+}
+
+.medical .contact-button {
+    background: #2c3e50;
+}
+
+.medical .contact-button:hover {
+    background: #34495e;
+    color: white;
+}
+
+.university-info {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-top: 30px;
+}
+
+.university-info h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.university-info p {
+    color: #666;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .team-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-container {
+        padding: 20px 15px;
+    }
+    
+    .card-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .profile-info {
+        text-align: center;
+    }
+    
+    .profile-image img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .team-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-content {
+        gap: 12px;
+    }
+    
+    .profile-image img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .contact-options {
+        justify-content: center;
+    }
 }

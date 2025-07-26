@@ -1,19 +1,22 @@
 footer {
     background-color: #020318;
     color: white;
-    padding: 20px 20px;
+    padding: 20px;
 }
 
 .footer-container {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 50px;
+    gap: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: flex-start;
 }
 
 .footer-container div {
-    flex: auto;
-    min-width: 0px;
+    flex: 1;
+    min-width: 200px; /* Better minimum width for content */
 }
 
 .footer-links h3,
@@ -22,21 +25,42 @@ footer {
     font-size: 18px;
     margin-bottom: 15px;
     color: #f9a826;
+    font-weight: 600;
 }
 
-/* Updated: Horizontal Quick Links with simple spacing */
+/* Footer Logo Section */
+.footer-logo {
+    flex: 0 0 auto; /* Don't grow/shrink, natural size */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-width: 150px;
+}
+
+.footer-logo img {
+    width: 80px;
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.footer-logo img:hover {
+    transform: scale(1.05);
+}
+
+/* Quick Links Section */
 .footer-links {
     text-align: left;
+    flex: 2; /* Take more space */
 }
 
 .footer-links ul {
     list-style: none;
     padding: 0;
+    margin: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 30px;
-    justify-content: left;
-    margin-left: 10px;
+    gap: 20px;
+    justify-content: flex-start;
 }
 
 .footer-links ul li {
@@ -46,22 +70,27 @@ footer {
 .footer-links ul li a {
     text-decoration: none;
     color: white;
-    transition: color 0.3s;
+    transition: color 0.3s ease;
     white-space: nowrap;
     font-size: 14px;
+    padding: 5px 0;
+    display: block;
 }
 
-.footer-links ul li a:hover {
+.footer-links ul li a:hover,
+.footer-links ul li a.active {
     color: #f9a826;
 }
 
+/* Contact Section */
 .footer-contact {
     text-align: left;
+    flex: 1.5;
 }
 
 .footer-contact p {
     margin-bottom: 8px;
-    margin-left: 10px;
+    line-height: 1.5;
 }
 
 .footer-contact p a {
@@ -83,6 +112,7 @@ footer {
     font-style: italic;
 }
 
+/* Social Icons (if you add them later) */
 .footer-social .social-icons a {
     color: white;
     font-size: 20px;
@@ -94,32 +124,14 @@ footer {
     color: #f9a826;
 }
 
-.footer-logo {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.footer-logo img {
-    width: 100px;
-    height: auto;
-}
-
+/* Footer Bottom */
 .footer-bottom {
     text-align: center;
-    margin-top: 20px;
-    padding-top: 15px;
+    margin-top: 30px;
+    padding-top: 20px;
     border-top: 1px solid #444;
     font-size: 14px;
     color: #cccccc;
-}
-
-.developer-credit {
-    margin-top: 10px;
-    font-size: 12px;
-    color: #888;
-    opacity: 0.8;
 }
 
 .dev-link {
@@ -135,25 +147,124 @@ footer {
     opacity: 1;
 }
 
-/* Responsive Design */
+/* Responsive Design - Tablet */
+@media (max-width: 1024px) {
+    .footer-container {
+        gap: 25px;
+        padding: 0 15px;
+    }
+    
+    .footer-links ul {
+        gap: 15px;
+    }
+    
+    .footer-logo img {
+        width: 70px;
+    }
+}
+
+/* Responsive Design - Mobile Large */
 @media (max-width: 768px) {
+    footer {
+        padding: 30px 15px 20px;
+    }
+    
     .footer-container {
         flex-direction: column;
         text-align: center;
-        gap: 30px;
-        max-width: 100%;
+        gap: 25px;
+        align-items: center;
+    }
+    
+    .footer-container div {
+        min-width: 100%;
+        text-align: center;
+    }
+    
+    .footer-logo {
+        order: 1; /* Logo first */
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .footer-links {
+        order: 2; /* Links second */
+        text-align: center;
     }
     
     .footer-links ul {
         justify-content: center;
-        gap: 20px;
+        gap: 15px;
+    }
+    
+    .footer-contact {
+        order: 3; /* Contact last */
+        text-align: center;
+    }
+    
+    .footer-contact p {
+        margin-left: 0;
     }
 }
 
-/* Stack links vertically on very small screens */
+/* Responsive Design - Mobile Small */
 @media (max-width: 480px) {
+    footer {
+        padding: 25px 10px 15px;
+    }
+    
+    .footer-container {
+        gap: 20px;
+    }
+    
+    .footer-links h3,
+    .footer-contact h3 {
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    
     .footer-links ul {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        align-items: center;
+    }
+    
+    .footer-links ul li a {
+        font-size: 15px;
+        padding: 8px 0;
+    }
+    
+    .footer-logo img {
+        width: 60px;
+    }
+    
+    .footer-bottom {
+        margin-top: 20px;
+        padding-top: 15px;
+    }
+    
+    .footer-bottom p {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+    
+    .developer-credit {
+        font-size: 11px;
+        margin-top: 8px;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 360px) {
+    footer {
+        padding: 20px 8px 12px;
+    }
+    
+    .footer-links ul li a {
+        font-size: 14px;
+    }
+    
+    .footer-logo img {
+        width: 50px;
     }
 }
