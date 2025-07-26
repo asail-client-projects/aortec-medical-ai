@@ -29,36 +29,36 @@
     <!-- Extensions Section -->
     <section class="extensions">
         <div class="extensions-container">
-            <!-- Extension 1: Automated Measurement -->
-            <div class="extension-card" data-service="automated_measurement">
-                <img src="{{ url_for('static', filename='images/extentions-par1.png') }}" alt="Automated Measurement of AAA" class="card-image">
-                <h2>Automated Measurement of AAA</h2>
-                <p>Quickly and accurately measure the size of the aneurysm.</p>
-                <button class="learn-more-btn">Use Service</button>
-            </div>
-            <!-- Extension 2: Growth Rate Prediction -->
+            <!-- Extension 1: Growth Rate Prediction -->
             <div class="extension-card" data-service="growth_rate">
-                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="Predict Rate of Growth" class="card-image">
+                <img src="{{ url_for('static', filename='images/extentions-par1.png') }}" alt="Predict Rate of Growth" class="card-image">
                 <h2>Predict Rate of Growth</h2>
                 <p>Estimate the growth rate of the aneurysm over time.</p>
                 <button class="learn-more-btn">Use Service</button>
             </div>
-            <!-- Extension 3: Rupture Risk Prediction -->
+            <!-- Extension 2: Rupture Risk Prediction -->
             <div class="extension-card" data-service="rupture_risk">
-                <img src="{{ url_for('static', filename='images/extentions-par3.png') }}" alt="Predict Risk of Rupture" class="card-image">
+                <img src="{{ url_for('static', filename='images/extentions-par2.png') }}" alt="Predict Risk of Rupture" class="card-image">
                 <h2>Predict Risk of Rupture</h2>
                 <p>Evaluate the risk of aneurysm rupture based on patient data.</p>
                 <button class="learn-more-btn">Use Service</button>
             </div>
+            <!-- Extension 3: Automated Measurement -->
+            <div class="extension-card coming-soon" data-service="automated_measurement">
+                <img src="{{ url_for('static', filename='images/extentions-par3.png') }}" alt="Automated Measurement of AAA" class="card-image">
+                <h2>Automated Measurement of AAA</h2>
+                <p>Quickly and accurately measure the size of the aneurysm.</p>
+                <button class="learn-more-btn">Use Service</button>
+            </div>
             <!-- Extension 4: Simulator -->
-            <div class="extension-card" data-service="simulator">
+            <div class="extension-card coming-soon" data-service="simulator">
                 <img src="{{ url_for('static', filename='images/extentions-par4.png') }}" alt="Simulator" class="card-image">
                 <h2>Simulator</h2>
                 <p>Utilize AI to segment and analyze new AAA cases efficiently.</p>
                 <button class="learn-more-btn">Use Service</button>
             </div>
             <!-- Extension 5: Other Aneurysms -->
-            <div class="extension-card" data-service="other_aneurysms">
+            <div class="extension-card coming-soon" data-service="other_aneurysms">
                 <img src="{{ url_for('static', filename='images/extentions-par5.png') }}" alt="Use Segmentation for Other Aneurysms" class="card-image">
                 <h2>Use Segmentation for Other Aneurysms</h2>
                 <p>Apply our model to segment different types of aneurysms.</p>
@@ -66,11 +66,11 @@
             </div>
 
             <!-- New Card: Coming Soon -->
-            <div class="extension-card coming-soon">
+            <div class="extension-card extra-soon">
                 <img src="{{ url_for('static', filename='images/extentions-par.png') }}" alt="Extra Extension Coming Soon" class="card-image">
-                <h2>Extra Extension Coming Soon!</h2>
-                <p>We're working on exciting new tools. Have suggestions? Share them with us!</p>
-                <a href="{{ url_for('contact') }}" class="suggest-btn">Give Suggestions</a>
+                <h2>Got Ideas? We're Listening!</h2>
+                <p>Help us innovate! Share your ideas for new medical imaging tools and AI extensions. Your input shapes AORTEC's future.</p>
+                <a href="{{ url_for('contact') }}" class="suggest-btn">Share Your Ideas</a>
             </div>
         </div>
     </section>

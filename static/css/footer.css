@@ -1,51 +1,86 @@
 footer {
     background-color: #020318;
     color: white;
-    padding: 20px 40px;
+    padding: 20px 20px;
 }
 
 .footer-container {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 50px;
 }
 
 .footer-container div {
-    flex: 1;
-    min-width: 200px;
+    flex: auto;
+    min-width: 0px;
 }
 
 .footer-links h3,
 .footer-contact h3,
 .footer-social h3 {
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     color: #f9a826;
+}
+
+/* Updated: Horizontal Quick Links with simple spacing */
+.footer-links {
+    text-align: left;
 }
 
 .footer-links ul {
     list-style: none;
     padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: left;
+    margin-left: 10px;
 }
 
 .footer-links ul li {
-    margin-bottom: 5px;
+    margin-bottom: 0;
 }
 
 .footer-links ul li a {
     text-decoration: none;
     color: white;
     transition: color 0.3s;
+    white-space: nowrap;
+    font-size: 14px;
 }
 
 .footer-links ul li a:hover {
     color: #f9a826;
 }
 
+.footer-contact {
+    text-align: left;
+}
+
+.footer-contact p {
+    margin-bottom: 8px;
+    margin-left: 10px;
+}
+
 .footer-contact p a {
     color: #f9a826;
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.footer-contact p a:hover {
+    color: #e09515;
+    text-decoration: underline;
+}
+
+.footer-contact .contact-message {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    font-style: italic;
 }
 
 .footer-social .social-icons a {
@@ -59,21 +94,66 @@ footer {
     color: #f9a826;
 }
 
+.footer-logo {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.footer-logo img {
+    width: 100px;
+    height: auto;
+}
+
 .footer-bottom {
     text-align: center;
     margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #444;
     font-size: 14px;
     color: #cccccc;
 }
 
-.footer-logo {
-    flex: 1; /* Take equal space like other sections */
-    display: flex;
-    align-items: center; /* Align logo vertically */
-    justify-content: flex-start; /* Align logo to the left */
+.developer-credit {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
+    opacity: 0.8;
 }
 
-.footer-logo img {
-    width: 100px; /* Adjust logo size */
-    height: auto; /* Maintain aspect ratio */
+.dev-link {
+    color: #f9a826;
+    text-decoration: none;
+    font-weight: normal;
+    transition: all 0.3s ease;
+}
+
+.dev-link:hover {
+    color: #e09515;
+    text-decoration: underline;
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 30px;
+        max-width: 100%;
+    }
+    
+    .footer-links ul {
+        justify-content: center;
+        gap: 20px;
+    }
+}
+
+/* Stack links vertically on very small screens */
+@media (max-width: 480px) {
+    .footer-links ul {
+        flex-direction: column;
+        gap: 10px;
+    }
 }

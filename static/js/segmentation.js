@@ -11,29 +11,21 @@ document.addEventListener("DOMContentLoaded", () => {
             
             <div class="upload-container">
                 <div class="upload-section">
-                    <h3>Choose Processing Method</h3>
-                    <div class="processing-method">
-                        <label>
-                            <input type="radio" name="processing_method" value="upload" checked> Upload Files
-                        </label>
-                        <label>
-                            <input type="radio" name="processing_method" value="local"> Use Local Directory
-                        </label>
-                    </div>
+                    <h3>Choose whether to upload one image or a folder</h3>
+                        <div class="upload-options">
+                            <label>
+                                <input type="radio" name="upload_type" value="files" checked> Select One File
+                            </label>
+                            <label>
+                                <input type="radio" name="upload_type" value="folder"> Select Folder
+                            </label>
+                        </div>
                     
                     <div id="upload-section" class="method-section">
                         <h4>Upload Your Files</h4>
                         <form id="upload-form" data-service="image_conversion" enctype="multipart/form-data">
                             <label for="dicom-file">Choose DICOM Files or a Folder</label>
                             <input type="file" id="dicom-file" name="dicom_file" multiple required>
-                            <div class="upload-options">
-                                <label>
-                                    <input type="radio" name="upload_type" value="files" checked> Select Files
-                                </label>
-                                <label>
-                                    <input type="radio" name="upload_type" value="folder"> Select Folder
-                                </label>
-                            </div>
                             <button type="submit" class="submit-btn">Convert</button>
                         </form>
                         <p class="file-info">Supported formats: DICOM, ZIP, or files without extension</p>
@@ -81,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Updated model3D service template for DICOM viewer
         model3D: `
         <div class="service-form-container">
-            <h2>DICOM Viewer with Measurements</h2>
+            <h2>DICOM 3D Viewer With Measurements</h2>
             <p>Generate a comprehensive DICOM viewer with measurement rulers from your DICOM files. This tool provides precise measurements and navigation through your medical images.</p>
             
             <div class="upload-container">

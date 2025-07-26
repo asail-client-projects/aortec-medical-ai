@@ -72,16 +72,6 @@ growth_rate: `
         <h2>Predict Rate of Growth</h2>
         <p>Estimate the growth rate of the aneurysm over time using our AI prediction model.</p>
         
-        <!-- Processing Method Selection -->
-        <div class="processing-method">
-            <label>
-                <input type="radio" name="file_type" value="single" checked> Upload Excel File for ONE Patient
-            </label>
-            <label>
-                <input type="radio" name="file_type" value="multiple"> Upload Excel File for MULTIPLE Patients
-            </label>
-        </div>
-        
         <!-- File Upload Section -->
         <div id="upload-section" class="method-section">
             <div class="upload-container">
