@@ -2,22 +2,18 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
     background-color: #f4f4f9;
     color: #333;
 }
 
 /* Common heading styles */
 h1, h2, h3, h4, h5, h6 {
-    font-family: Arial, sans-serif;
 }
 
 /* Common paragraph styles */
 p {
-    font-family: Arial, sans-serif;
 }
 
 /* Other common elements */
 button, input, select, textarea {
-    font-family: Arial, sans-serif;
 }

@@ -1,0 +1,115 @@
+<!-- LEGAL DISCLAIMERS PAGE -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Disclaimers & Terms | AORTEC</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+    <style>
+        .legal-container {
+            max-width: 80%;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .legal-section {
+            margin: 30px 0;
+            padding: 20px;
+            border-left: 4px solid #f9a826;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .legal-section h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        
+        .highlight-warning {
+            background: #fff5f5;
+            border-left-color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: #f9a826;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .back-button:hover {
+            background: #e09515;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+    
+    <div class="legal-container">
+        <a href="javascript:history.back()" class="back-button">← Back to Previous Page</a>
+        
+        <h1>Legal Disclaimers & Terms of Use</h1>        
+        <div class="legal-section highlight-warning">
+            <h3>⚕️ CRITICAL MEDICAL DISCLAIMER</h3>
+            <p><strong>This software is for educational, research, and demonstration purposes ONLY.</strong></p>
+            <ul>
+                <li><strong>NOT FOR CLINICAL USE:</strong> Do not use results for actual medical diagnosis, treatment, or clinical decision-making</li>
+                <li><strong>CONSULT PROFESSIONALS:</strong> Always consult qualified healthcare professionals for medical advice</li>
+                <li><strong>NO WARRANTY:</strong> We provide no warranties about accuracy, reliability, or fitness for medical use</li>
+                <li><strong>YOUR RESPONSIBILITY:</strong> You are solely responsible for any decisions made based on this tool</li>
+            </ul>
+        </div>
+        
+        <div class="legal-section">
+            <h3>🔒 Data Privacy & Security</h3>
+            <ul>
+                <li><strong>Temporary Processing:</strong> Files are processed temporarily and deleted after use</li>
+                <li><strong>No Permanent Storage:</strong> We don't store your medical data on our servers</li>
+                <li><strong>Public Tool:</strong> This is a public platform - don't upload identifiable patient data</li>
+                <li><strong>Use Test Data:</strong> Recommended for anonymous or test DICOM files only</li>
+                <li><strong>Data Anonymization:</strong> You are responsible for anonymizing data before upload</li>
+            </ul>
+        </div>
+        
+        <div class="legal-section">
+            <h3>📋 Terms of Use</h3>
+            <p>By using AORTEC, you acknowledge and agree that:</p>
+            <ul>
+                <li>You understand this is an educational/research platform</li>
+                <li>You will not use results for clinical decisions</li>
+                <li>You will use this tool responsibly and ethically</li>
+                <li>You will not attempt to harm or misuse the platform</li>
+                <li>You accept all risks associated with using this experimental tool</li>
+            </ul>
+        </div>
+        
+        <div class="legal-section">
+            <h3>⚖️ Limitation of Liability</h3>
+            <p>The developers of AORTEC shall not be liable for any damages arising from the use of this software, including but not limited to direct, indirect, incidental, or consequential damages.</p>
+        </div>
+        
+        <div class="legal-section">
+            <h3>🚨 Emergency Notice</h3>
+            <p><strong>If this is a medical emergency, do not use this tool.</strong> Contact emergency services immediately or consult a healthcare professional.</p>
+        </div>
+        
+        <div class="legal-section">
+            <h3>📞 Contact Information</h3>
+            <p>If you have questions about these terms, contact us at: <a href="{{ url_for('contact') }}">Contact Page</a></p>
+        </div>
+    </div>
+    
+    {% include 'footer.html' %}
+</body>
+</html>

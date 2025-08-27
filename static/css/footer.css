@@ -268,3 +268,109 @@ footer {
         width: 50px;
     }
 }
+
+/* CSS FOR THE DISCLAIMER BAR */
+.medical-disclaimer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #020318;
+    border-top: 3px solid #f9a826;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+}
+
+.medical-disclaimer-bar.hidden {
+    transform: translateY(100%);
+}
+
+.disclaimer-bar-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.disclaimer-text {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.disclaimer-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.disclaimer-message {
+    color: white;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.disclaimer-link {
+    color: #f9a826;
+    text-decoration: underline;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.disclaimer-link:hover {
+    color: #e09515;
+    text-decoration: none;
+}
+
+.disclaimer-close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    flex-shrink: 0;
+}
+
+.disclaimer-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Add bottom padding to body to prevent content overlap */
+body {
+    padding-bottom: 70px; /* Adjust based on disclaimer bar height */
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .disclaimer-bar-content {
+        padding: 10px 15px;
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .disclaimer-message {
+        font-size: 13px;
+    }
+    
+    .disclaimer-close {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+    }
+    
+    body {
+        padding-bottom: 90px; /* More space on mobile */
+    }
+}
+
+/* When disclaimer is closed, remove bottom padding */
+body.disclaimer-closed {
+    padding-bottom: 0;
+}

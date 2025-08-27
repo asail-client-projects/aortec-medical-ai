@@ -1073,6 +1073,10 @@ def contact():
 def segmentation():
     return render_template('segmentation.html')
 
+#  Legal page route
+@app.route('/legal')
+def legal_disclaimers():
+    return render_template('legal.html')
 
 if __name__ == '__main__':
     import os

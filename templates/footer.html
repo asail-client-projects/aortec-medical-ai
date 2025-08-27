@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Footer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
 </head>
 <body>
     <footer>
@@ -39,5 +40,22 @@
             <p>© 2025 AORTEC. All rights reserved.</p>
         </div>
     </footer>
+
+    <div class="medical-disclaimer-bar">
+        <div class="disclaimer-bar-content">
+        <div class="disclaimer-text">
+            <span class="disclaimer-icon">🚨</span>
+            <span class="disclaimer-message">
+            <strong>Medical Disclaimer:</strong> This platform is for educational and research purposes only.
+            <a href="{{ url_for('legal_disclaimers') }}" class="disclaimer-link">View full disclaimers</a>
+            </span>
+        </div>
+        <!-- Option A: keep inline; see JS note below -->
+        <button class="disclaimer-close" onclick="closeDiclaimerBar()" aria-label="Close disclaimer">×</button>
+        </div>
+    </div>
+
+    <script defer src="{{ url_for('static', filename='js/footer.js') }}"></script>
+
 </body>
 </html>
