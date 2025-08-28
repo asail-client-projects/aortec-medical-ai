@@ -63,12 +63,14 @@
         <div class="legal-section highlight-warning">
             <h3>⚕️ CRITICAL MEDICAL DISCLAIMER</h3>
             <p><strong>This software is for educational, research, and demonstration purposes ONLY.</strong></p>
-            <ul>
+            <!--
+             <ul>
                 <li><strong>NOT FOR CLINICAL USE:</strong> Do not use results for actual medical diagnosis, treatment, or clinical decision-making</li>
                 <li><strong>CONSULT PROFESSIONALS:</strong> Always consult qualified healthcare professionals for medical advice</li>
                 <li><strong>NO WARRANTY:</strong> We provide no warranties about accuracy, reliability, or fitness for medical use</li>
                 <li><strong>YOUR RESPONSIBILITY:</strong> You are solely responsible for any decisions made based on this tool</li>
-            </ul>
+              </ul>
+            -->
         </div>
         
         <div class="legal-section">
@@ -77,11 +79,15 @@
                 <li><strong>Temporary Processing:</strong> Files are processed temporarily and deleted after use</li>
                 <li><strong>No Permanent Storage:</strong> We don't store your medical data on our servers</li>
                 <li><strong>Public Tool:</strong> This is a public platform - don't upload identifiable patient data</li>
+            <!--
                 <li><strong>Use Test Data:</strong> Recommended for anonymous or test DICOM files only</li>
                 <li><strong>Data Anonymization:</strong> You are responsible for anonymizing data before upload</li>
+             -->
             </ul>
         </div>
         
+        <!-- 
+
         <div class="legal-section">
             <h3>📋 Terms of Use</h3>
             <p>By using AORTEC, you acknowledge and agree that:</p>
@@ -108,6 +114,7 @@
             <h3>📞 Contact Information</h3>
             <p>If you have questions about these terms, contact us at: <a href="{{ url_for('contact') }}">Contact Page</a></p>
         </div>
+        -->
     </div>
     
     {% include 'footer.html' %}

@@ -88,12 +88,7 @@ growth_rate: `
                         <ul>
                             <li>Current Axial Diameter (mm) - The current size of the aneurysm</li>
                             <li>ILT Volume (mL) - The Intraluminal Thrombus volume</li>
-                        </ul>
-                        <p><strong>Optional columns that can improve prediction accuracy:</strong></p>
-                        <ul>
-                            <li>Previous Axial Diameter (mm) - For verification/comparison</li>
                             <li>Time Interval (months) - Time since previous measurement</li>
-                            <li>Patient ID - For identifying individual patients in the results</li>
                         </ul>
                     </div>
                 </div>
@@ -120,7 +115,7 @@ growth_rate: `
 rupture_risk: `
     <div class="service-form-container">
         <h2>Predict Risk of Rupture</h2>
-        <p>Upload patient data to evaluate the risk of aneurysm rupture now and over time.</p>
+        <p>Upload patient data to evaluate the risk of aneurysm rupture.</p>
         
         <div class="upload-container">
             <div class="upload-section">
@@ -133,19 +128,17 @@ rupture_risk: `
                 <div class="file-info">
                     <p><strong>Required columns in your spreadsheet:</strong></p>
                     <ul>
-                        <li>Patient ID - For identifying individual patients</li>
                         <li>Axial Diameter (mm) - The size of the aneurysm</li>
                         <li>ILT Volume (mL) - The Intraluminal Thrombus volume</li>
-                    </ul>
-                    <p><strong>Optional columns that will improve prediction accuracy:</strong></p>
-                    <ul>
-                        <li>Peak Wall Stress (kPa) - The maximum stress on the aneurysm wall</li>
                         <li>Blood Pressure (mmHg) - Patient's systolic blood pressure</li>
                         <li>Smoking History - Whether the patient smokes (Yes/No)</li>
                         <li>Age - Patient's age in years</li>
                         <li>Gender - Patient's gender (M/F)</li>
                     </ul>
-                    <p>Note: The AI model will calculate rupture risk for current measurements, then predict risk progression over 1 and 5 years.</p>
+                    <p><strong>Optional columns that will improve prediction accuracy:</strong></p>
+                    <ul>
+                        <li>Peak Wall Stress (kPa) - The maximum stress on the aneurysm wall</li>
+                    </ul>
                 </div>
             </div>
             
@@ -165,7 +158,6 @@ rupture_risk: `
                     <li>Current rupture risk for each patient</li>
                     <li>Predicted risk progression over time (1 and 5 years)</li>
                     <li>Risk category classification (Low, Moderate, High, Very High)</li>
-                    <li>Visualizations of patient risk trajectories</li>
                     <li>Detailed patient-by-patient results table</li>
                 </ul>
             </div>
