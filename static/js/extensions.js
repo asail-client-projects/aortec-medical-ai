@@ -1286,16 +1286,6 @@ function displayRuptureRiskResults(data, resultContainer) {
             `;
         }
         
-        // Add primary visualization if available
-        if (data.output) {
-            resultHTML += `
-                <div class="result-image">
-                    <h4>Patient Risk Progression</h4>
-                    <img src="${data.output}" alt="AAA Risk Progression Visualization" style="max-width: 100%; border: 1px solid #ddd; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                </div>
-            `;
-        }
-        
         // Add patient-specific visualization if available
         if (data.patient_visualization) {
             resultHTML += `

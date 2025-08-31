@@ -965,25 +965,27 @@ def rupture_risk_service():
             result = predict_rupture_risk_from_excel(file_path, output_dir)
             
             if 'error' in result:
-                print(f"[ERROR] Error processing rupture risk: {result['error']}")
                 return jsonify({'error': result['error']}), 400
                 
             # Format response with statistics and visualization
             stats = result['statistics']
-            visualization_url = f"/serve/processed/rupture_risk/{os.path.basename(result['visualization'])}"
-            patient_visualization_url = f"/serve/processed/rupture_risk/{os.path.basename(result['patient_visualization'])}"
-            csv_url = f"/serve/processed/rupture_risk/{os.path.basename(result['results_csv'])}"
-            
-            response = {
+            patient_visualization_url = None
+            if 'patient_visualization' in result and result['patient_visualization']:
+                patient_visualization_url = f"/serve/processed/rupture_risk/{os.path.basename(result['patient_visualization'])}"
+
+            download_url = None  
+            if 'results_csv' in result and result['results_csv']:
+                download_url = f"/serve/processed/rupture_risk/{os.path.basename(result['results_csv'])}"
+
+            return jsonify({
+                'success': True,
                 'message': result['message'],
-                'output': visualization_url,
+                # ❌ REMOVED: 'output': visualization_url,  # This was the misleading chart
                 'patient_visualization': patient_visualization_url,
-                'download_url': csv_url,
-                'statistics': stats,
+                'download_url': download_url,
+                'statistics': result.get('statistics', {}),
                 'detailed_results': result.get('detailed_results', [])
-            }
-            
-            return jsonify(response), 200
+            }),200
         
         else:
             print("[ERROR] No file uploaded")
