@@ -69,86 +69,203 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         </div>
     `,
-
-        // Updated model3D service template for DICOM viewer
-        model3D: `
-        <div class="service-form-container">
-            <h2>DICOM 3D Viewer With Measurements</h2>
-            <p>Generate a comprehensive DICOM viewer with measurement rulers from your DICOM files. This tool provides precise measurements and navigation through your medical images.</p>
-            
-            <div class="upload-container">
-                <div class="upload-section">
-                    <h3>Choose Processing Method</h3>
-                    <div class="processing-method">
-                        <label>
-                            <input type="radio" name="processing_method" value="upload" checked> Upload Files
-                        </label>
-                        <label>
-                            <input type="radio" name="processing_method" value="local"> Use Local Directory
-                        </label>
-                    </div>
-                    
-                    <div id="upload-section" class="method-section">
-                        <h4>Upload Your DICOM Folder</h4>
-                        <form id="upload-form" data-service="3d_model" enctype="multipart/form-data">
-                            <label for="dicom-file">Choose a folder containing DICOM files</label>
-                            <input type="file" id="dicom-file" name="dicom_file" multiple required webkitdirectory directory>
-                            <div class="upload-options" style="display: none;">
-                                <label>
-                                    <input type="radio" name="upload_type" value="folder" checked> Select Folder
-                                </label>
-                            </div>
-                            <div class="warning-message">
-                                Note: For optimal viewing, please select a folder containing a complete DICOM series.
-                            </div>
-                            
-                            <button type="submit" class="submit-btn">Generate DICOM Viewer</button>
-                        </form>
-                        <p class="file-info">Supported formats: DICOM folder with multiple files</p>
-                    </div>
-                    
-                    <div id="local-section" class="method-section" style="display: none;">
-                        <h4>Use Local Directory</h4>
-                        <form id="local-form" data-service="3d_model">
-                            <label for="directory">Full path to DICOM directory:</label>
-                            <input type="text" id="directory" name="directory" class="form-control" required 
-                                   placeholder="e.g., D:\\path\\to\\dicom\\files">
-                            
-                            <button type="submit" class="submit-btn">Process Directory</button>
-                        </form>
-                        <p class="file-info">Enter the full path to a directory on the server that contains DICOM files</p>
-                    </div>
+    slicer_3d: `
+    <div class="service-form-container">
+        <h2>Professional 3D DICOM Visualization with 3D Slicer</h2>
+        <p>Learn how to create professional-grade 3D models from your DICOM files using 3D Slicer - the industry standard for medical 3D visualization trusted by hospitals worldwide.</p>
+        
+        <div class="slicer-hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h3>Why Choose 3D Slicer?</h3>
+                    <ul class="benefits-list">
+                        <li>✅ <strong>Industry Standard</strong> - Used by hospitals and research institutions globally</li>
+                        <li>✅ <strong>Completely Free</strong> - Open-source with no licensing costs</li>
+                        <li>✅ <strong>Professional Features</strong> - Volume rendering, segmentation, measurements</li>
+                        <li>✅ <strong>3D Printing Ready</strong> - Export STL files for 3D printing</li>
+                        <li>✅ <strong>Cross Platform</strong> - Available for Windows, Mac, and Linux</li>
+                    </ul>
                 </div>
-                
-                <div class="preview-section">
-                    <h3>Preview</h3>
-                    <div id="file-preview" class="preview-container">
-                        <p>No folder selected. Your uploaded folder information will be displayed here.</p>
-                    </div>
-                    <div class="info-box">
-                        <h4>What is the DICOM Viewer?</h4>
-                        <p>The DICOM viewer creates comprehensive medical image displays with measurement rulers, allowing for:</p>
-                        <ul>
-                            <li>Precise measurements in millimeters using built-in rulers</li>
-                            <li>Navigation through multiple DICOM slices</li>
-                            <li>Professional medical image viewing interface</li>
-                            <li>Interactive web-based viewer for easy access</li>
-                            <li>Multi-view displays showing different slices</li>
-                            <li>Pixel spacing information for accurate measurements</li>
-                        </ul>
-                        <p>Perfect for medical professionals, students, and researchers who need accurate measurements and clear visualization of medical images.</p>
-                    </div>
+                <div class="hero-image">
+                    <img src="/static/images/slicer-3d-card.png" alt="3D Slicer Preview" class="preview-img">                </div>
                 </div>
-            </div>
-            
-            <div class="results-section">
-                <h3>Results</h3>
-                <div id="results-container" class="results-container">
-                    <p>DICOM viewer will appear here after processing. You can navigate through slices and make measurements.</p>
-                </div>
-            </div>
-            <p class="processing-note">Note: DICOM viewer generation may take a few minutes depending on the number of files in your series.</p>
         </div>
+
+        <div class="workflow-section">
+            <h3> Complete Workflow</h3>
+            <div class="workflow-steps">
+                <div class="workflow-step">
+                    <div class="step-icon">1</div>
+                    <div class="step-content">
+                        <h4>Download 3D Slicer</h4>
+                        <p>First, Get the free professional software</p>
+                    </div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-icon">2</div>
+                    <div class="step-content">
+                        <h4>Open 3D Slicer</h4>
+                        <p>View the 3D Slicer interface</p>
+                    </div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step">
+                    <div class="step-icon">3</div>
+                    <div class="step-content">
+                        <h4>Create 3D Models</h4>
+                        <p>Follow our step-by-step guide</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <h3>Download 3D Slicer</h3>
+            <p>Choose your operating system to download the latest stable version:</p>
+            <div class="download-buttons">
+                <a href="https://download.slicer.org/" class="download-btn windows" target="_blank">
+                    <i class="fab fa-windows"></i>
+                    <div class="btn-content">
+                        <span class="os-name">Windows</span>
+                        <span class="version">Version 5.8.1</span>
+                    </div>
+                </a>
+                <a href="https://download.slicer.org/" class="download-btn mac" target="_blank">
+                    <i class="fab fa-apple"></i>
+                    <div class="btn-content">
+                        <span class="os-name">macOS</span>
+                        <span class="version">Version 5.8.1</span>
+                    </div>
+                </a>
+                <a href="https://download.slicer.org/" class="download-btn linux" target="_blank">
+                    <i class="fab fa-linux"></i>
+                    <div class="btn-content">
+                        <span class="os-name">Linux</span>
+                        <span class="version">Version 5.8.1</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="tutorial-section">
+            <h3>Learning Resources</h3>
+            <div class="tutorial-grid">
+                <div class="tutorial-card video-tutorial">
+                    <div class="tutorial-icon">🎥</div>
+                    <h4>Video Tutorial</h4>
+                    <p>Watch a step-by-step video guide on creating 3D models from DICOM files</p>
+                    <a href="#" class="tutorial-btn" onclick="showVideoTutorial()">Watch Tutorial</a>
+                </div>
+                <div class="tutorial-card text-guide">
+                    <div class="tutorial-icon">📖</div>
+                    <h4>Official Documentation</h4>
+                    <p>Comprehensive training materials from the 3D Slicer team</p>
+                    <a href="https://training.slicer.org/" class="tutorial-btn" target="_blank">Read Documentation</a>
+                </div>
+                <div class="tutorial-card quick-start">
+                    <div class="tutorial-icon">⚡</div>
+                    <h4>Quick Start Guide</h4>
+                    <p>Essential steps to get started with 3D DICOM visualization</p>
+                    <a href="#" class="tutorial-btn" onclick="showQuickStart()">Get Started</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="video-container" id="video-container" style="display: none;">
+            <h4>3D DICOM Visualization Tutorial</h4>
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/QQ5_1fvFg_w" 
+                        title="3D Slicer DICOM Tutorial" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+            <p class="video-description">This tutorial shows you how to load DICOM files and create 3D visualizations in 3D Slicer.</p>
+        </div>
+
+        <div class="quick-start-guide" id="quick-start" style="display: none;">
+            <h4>⚡ Quick Start Guide</h4>
+            <div class="steps-container">
+                <div class="guide-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h5>Download and Install 3D Slicer</h5>
+                        <p>Use the download buttons above to get 3D Slicer for your operating system. Installation is straightforward - just run the installer.</p>
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h5>Launch 3D Slicer</h5>
+                        <p>Open 3D Slicer. You'll see the welcome screen with options to load data.</p>
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h5>Load Your DICOM Files</h5>
+                        <p>Click "Add DICOM Data" and select your DICOM folder. 3D Slicer will automatically organize your series.</p>
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h5>Create 3D Visualization</h5>
+                        <p>Use Volume Rendering or Segmentation modules to create interactive 3D models of your medical data.</p>
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h5>Export Your Models</h5>
+                        <p>Export as STL files for 3D printing or save as scenes for sharing with colleagues.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-showcase">
+            <h3>What You Can Create</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🫀</div>
+                    <h4>Volume Rendering</h4>
+                    <p>Create transparent 3D visualizations showing internal structures</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🦴</div>
+                    <h4>Segmentation</h4>
+                    <p>Isolate specific organs or tissues for detailed analysis</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📏</div>
+                    <h4>Measurements</h4>
+                    <p>Precise 3D measurements and annotations</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖨️</div>
+                    <h4>3D Printing</h4>
+                    <p>Export STL files ready for 3D printing</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="support-section">
+            <h3>Need Help?</h3>
+            <div class="support-options">
+                <div class="support-option">
+                    <h4>📧 Community Forum</h4>
+                    <p>Join thousands of users in the active 3D Slicer community</p>
+                    <a href="https://discourse.slicer.org/" target="_blank" class="support-link">Visit Forum</a>
+                </div>
+                <div class="support-option">
+                    <h4>📚 Documentation</h4>
+                    <p>Comprehensive guides and API documentation</p>
+                    <a href="https://slicer.readthedocs.io/" target="_blank" class="support-link">Read Docs</a>
+                </div>
+            </div>
+        </div>
+    </div>
     `
     };
 
@@ -544,86 +661,6 @@ function handleLocalFormSubmit(event) {
 }
 
 
-function handleDicomVisualizationResult(data, resultContainer) {
-    // Build result HTML for 3D Visualization
-    let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
-    
-    const mainVisualization = data.output;
-    
-    resultHTML += `
-        <h4>3D Visualization Generated Successfully</h4>
-        <div class="result-image">
-            <img src="${mainVisualization}" alt="3D Visualization">
-        </div>
-    `;
-    
-    // Add download button for the main visualization
-    resultHTML += `
-        <div class="download-section">
-            <a href="${mainVisualization}" class="download-btn" download>Download Visualization</a>
-        </div>
-    `;
-    
-    // Add info about the visualization
-    resultHTML += `
-        <div class="model-info">
-            <h4>About Your Visualization</h4>
-            <p>This visualization shows a 3D representation of your DICOM data, highlighting anatomical structures based on density values.</p>
-            <p>Potential uses:</p>
-            <ul>
-                <li>Visualization: See anatomical structures clearly</li>
-                <li>Education: Identify and study different tissues</li>
-                <li>Planning: Use for preliminary analysis</li>
-                <li>Documentation: Include in reports and presentations</li>
-            </ul>
-        </div>
-    `;
-    
-    resultContainer.innerHTML = resultHTML;
-}
-
-
-function simulateNavigation(direction) {
-    const image = document.getElementById('main-dicom-image');
-    if (!image) return;
-    
-    // Add visual feedback
-    image.style.opacity = '0.7';
-    image.style.transform = 'scale(0.95)';
-    
-    // Create notification
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #f9a826;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        z-index: 1000;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-    `;
-    notification.textContent = direction > 0 ? 'Next View ➡️' : '⬅️ Previous View';
-    document.body.appendChild(notification);
-    
-    // Simulate navigation delay
-    setTimeout(() => {
-        image.style.opacity = '1';
-        image.style.transform = 'scale(1)';
-        
-        // Remove notification
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 500);
-}
 
 function displayDicomViewerResult(data, resultContainer) {
     // Display DICOM viewer results with proper sizing
@@ -677,51 +714,6 @@ function displayDicomViewerResult(data, resultContainer) {
 }
 
 
-// Function to add navigation simulation
-function addNavigationSimulation() {
-    // Add keyboard navigation like 3dModel.py
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'ArrowLeft') {
-            event.preventDefault();
-            simulateNavigation(-1);
-        } else if (event.key === 'ArrowRight') {
-            event.preventDefault();
-            simulateNavigation(1);
-        }
-    });
-    
-    // Add touch/swipe support for mobile
-    let startX = 0;
-    let startY = 0;
-    
-    document.addEventListener('touchstart', function(event) {
-        startX = event.touches[0].clientX;
-        startY = event.touches[0].clientY;
-    });
-    
-    document.addEventListener('touchend', function(event) {
-        if (!startX || !startY) return;
-        
-        const endX = event.changedTouches[0].clientX;
-        const endY = event.changedTouches[0].clientY;
-        
-        const deltaX = endX - startX;
-        const deltaY = endY - startY;
-        
-        // Check if it's a horizontal swipe (not vertical scroll)
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-            if (deltaX > 0) {
-                simulateNavigation(-1); // Swipe right = previous
-            } else {
-                simulateNavigation(1);  // Swipe left = next
-            }
-        }
-        
-        startX = 0;
-        startY = 0;
-    });
-}
-
 // Function to display image conversion results
 function displayImageConversionResult(data, resultContainer) {
     let resultHTML = `<p class="success">${data.message || 'Processing completed successfully!'}</p>`;
@@ -759,263 +751,6 @@ function displayImageConversionResult(data, resultContainer) {
     resultContainer.innerHTML = resultHTML;
 }
 
-
-
-// New function to display enhanced DICOM viewer results (inspired by 3dModel.py)
-function displayEnhancedDicomViewer(data, resultContainer) {
-    let resultHTML = `<p class="success">${data.message || 'DICOM visualization generated successfully!'}</p>`;
-    
-    // Create enhanced viewer container with navigation (like 3dModel.py)
-    resultHTML += `
-        <div class="enhanced-dicom-viewer">
-            <div class="viewer-header">
-                <h4>🔬 DICOM Viewer with Navigation</h4>
-                <p>Navigate through DICOM slices with measurement rulers (inspired by 3dModel.py)</p>
-            </div>
-            
-            <div class="viewer-image-container">
-                <div class="image-wrapper">
-                    <img id="main-dicom-image" src="${data.output}" alt="DICOM Viewer" loading="lazy">
-                    
-                    <!-- Navigation buttons positioned like 3dModel.py -->
-                    <button class="nav-overlay-btn prev-overlay" onclick="simulateNavigation(-1)" title="Previous View">
-                        ⬅️
-                    </button>
-                    <button class="nav-overlay-btn next-overlay" onclick="simulateNavigation(1)" title="Next View">
-                        ➡️
-                    </button>
-                </div>
-                
-                <!-- Control buttons like 3dModel.py button frame -->
-                <div class="viewer-controls">
-                    <button class="control-btn" onclick="simulateNavigation(-1)">⬅️ Previous View</button>
-                    <button class="control-btn" onclick="simulateNavigation(1)">Next View ➡️</button>
-                </div>
-            </div>
-            
-            <div class="viewer-info">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <strong>📏 Measurement Rulers:</strong> Yellow rulers show precise measurements in millimeters
-                    </div>
-                    <div class="info-item">
-                        <strong>🎯 Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)
-                    </div>
-                    <div class="info-item">
-                        <strong>📊 Pixel Spacing:</strong> Displayed for accurate measurements
-                    </div>
-                    <div class="info-item">
-                        <strong>🔄 Navigation:</strong> Use arrow buttons or keyboard arrows (like 3dModel.py)
-                    </div>
-                </div>
-            </div>
-            
-            <div class="download-section">
-                <a href="${data.output}" class="download-btn primary" download>
-                    📥 Download DICOM Viewer Image
-                </a>
-            </div>
-        </div>
-    `;
-    
-    // Add enhanced styling
-    resultHTML += `
-        <style>
-            .enhanced-dicom-viewer {
-                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                border-radius: 12px;
-                padding: 25px;
-                margin: 20px 0;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                border: 2px solid #f9a826;
-            }
-            
-            .viewer-header {
-                text-align: center;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-                border-bottom: 2px solid #f9a826;
-            }
-            
-            .viewer-header h4 {
-                color: #f9a826;
-                margin: 0 0 10px 0;
-                font-size: 22px;
-            }
-            
-            .viewer-image-container {
-                position: relative;
-                text-align: center;
-                margin: 20px 0;
-            }
-            
-            .image-wrapper {
-                position: relative;
-                display: inline-block;
-                background: #000;
-                border-radius: 8px;
-                padding: 10px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            }
-            
-            #main-dicom-image {
-                max-width: 100%;
-                max-height: 60vh;
-                height: auto;
-                width: auto;
-                object-fit: contain;
-                border: 2px solid #f9a826;
-                border-radius: 5px;
-                display: block;
-            }
-            
-            /* Navigation buttons positioned like 3dModel.py */
-            .nav-overlay-btn {
-                position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(249, 168, 38, 0.9);
-                color: #1a1a1a;
-                border: none;
-                padding: 15px 20px;
-                border-radius: 50%;
-                cursor: pointer;
-                font-size: 20px;
-                font-weight: bold;
-                transition: all 0.3s ease;
-                z-index: 10;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            }
-            
-            .nav-overlay-btn:hover {
-                background: rgba(224, 149, 21, 0.95);
-                transform: translateY(-50%) scale(1.1);
-            }
-            
-            .prev-overlay {
-                left: -25px;
-            }
-            
-            .next-overlay {
-                right: -25px;
-            }
-            
-            /* Control buttons like 3dModel.py button frame */
-            .viewer-controls {
-                display: flex;
-                justify-content: center;
-                gap: 20px;
-                margin: 20px 0;
-                padding: 15px;
-                background: rgba(249, 168, 38, 0.1);
-                border-radius: 8px;
-                border: 1px solid rgba(249, 168, 38, 0.3);
-            }
-            
-            .control-btn {
-                background: #f9a826;
-                color: #1a1a1a;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: bold;
-                font-size: 16px;
-                transition: all 0.3s ease;
-                min-width: 140px;
-            }
-            
-            .control-btn:hover {
-                background: #e09515;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            }
-            
-            .viewer-info {
-                margin: 20px 0;
-            }
-            
-            .info-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 15px;
-                margin-top: 15px;
-            }
-            
-            .info-item {
-                background: white;
-                padding: 15px;
-                border-radius: 8px;
-                border-left: 4px solid #f9a826;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            }
-            
-            .download-section {
-                text-align: center;
-                margin: 25px 0;
-                padding: 20px;
-                background: rgba(249, 168, 38, 0.1);
-                border-radius: 8px;
-            }
-            
-            .download-btn.primary {
-                background: linear-gradient(135deg, #f9a826, #e09515);
-                color: white;
-                padding: 15px 30px;
-                border: none;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: bold;
-                font-size: 18px;
-                display: inline-block;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 12px rgba(249, 168, 38, 0.3);
-            }
-            
-            .download-btn.primary:hover {
-                background: linear-gradient(135deg, #e09515, #c8750d);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(249, 168, 38, 0.4);
-                color: white;
-                text-decoration: none;
-            }
-            
-            /* Responsive design */
-            @media (max-width: 768px) {
-                .viewer-controls {
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                
-                .control-btn {
-                    width: 100%;
-                }
-                
-                .nav-overlay-btn {
-                    font-size: 16px;
-                    padding: 10px 15px;
-                }
-                
-                .prev-overlay {
-                    left: -20px;
-                }
-                
-                .next-overlay {
-                    right: -20px;
-                }
-                
-                .info-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-    `;
-    
-    resultContainer.innerHTML = resultHTML;
-    
-    // Add navigation simulation functionality
-    addNavigationSimulation();
-}
 
 // With this improved version:
 function handleImprovedResultDisplay(data, resultContainer, serviceType) {
@@ -1090,59 +825,6 @@ function applyImageSizingFix() {
     document.head.appendChild(style);
 }
 
-
-// Add this function to your segmentation.js file or update the existing result display code
-
-function displayDicomViewerResult(data, resultContainer) {
-    // Display DICOM viewer results with proper sizing
-    let resultHTML = `<p class="success">${data.message || 'DICOM visualization generated successfully!'}</p>`;
-    
-    // Create a properly sized container for the DICOM viewer
-    resultHTML += `
-        <div class="dicom-viewer-result">
-            <h4>DICOM Viewer Generated</h4>
-            <div class="result-image">
-                <img src="${data.output}" alt="DICOM Viewer" loading="lazy">
-            </div>
-            <div class="image-info">
-                <p>📏 This viewer includes measurement rulers for precise measurements</p>
-                <p>🔍 Use the interactive viewer for navigation through slices</p>
-            </div>
-        </div>
-    `;
-    
-    // Add download button
-    resultHTML += `
-        <div class="download-section" style="text-align: center; margin: 20px 0;">
-            <a href="${data.output}" class="download-btn" download>
-                📥 Download DICOM Viewer Image
-            </a>
-        </div>
-    `;
-    
-    // Add usage instructions
-    resultHTML += `
-        <div class="usage-instructions">
-            <h4>About Your DICOM Viewer</h4>
-            <div class="instruction-grid">
-                <div class="instruction-item">
-                    <strong>Measurement Rulers:</strong> Yellow rulers show precise measurements in millimeters
-                </div>
-                <div class="instruction-item">
-                    <strong>Red Markers:</strong> Tick marks indicate measurement intervals (major: 50mm, minor: 10mm)
-                </div>
-                <div class="instruction-item">
-                    <strong>Pixel Spacing:</strong> Displayed information ensures measurement accuracy
-                </div>
-                <div class="instruction-item">
-                    <strong>Medical Data:</strong> Patient and study information shown when available
-                </div>
-            </div>
-        </div>
-    `;
-    
-    resultContainer.innerHTML = resultHTML;
-}
 
 // Update your existing handleFormSubmit function to use better image sizing
 // Find this section in your existing code and replace the result display:
@@ -1639,3 +1321,281 @@ function handleGenericResult(data, resultContainer) {
     
     resultContainer.innerHTML = resultHTML;
 }
+
+
+// Function to show video tutorial
+function showVideoTutorial() {
+    const videoContainer = document.getElementById('video-container');
+    const quickStart = document.getElementById('quick-start');
+    
+    if (videoContainer.style.display === 'none' || !videoContainer.style.display) {
+        videoContainer.style.display = 'block';
+        quickStart.style.display = 'none';
+        
+        // Smooth scroll to video
+        setTimeout(() => {
+            videoContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 100);
+        
+        // Track video view
+        trackSlicerAction('video_tutorial_viewed');
+    } else {
+        videoContainer.style.display = 'none';
+    }
+}
+
+// Function to show quick start guide
+function showQuickStart() {
+    const quickStart = document.getElementById('quick-start');
+    const videoContainer = document.getElementById('video-container');
+    
+    if (quickStart.style.display === 'none' || !quickStart.style.display) {
+        quickStart.style.display = 'block';
+        videoContainer.style.display = 'none';
+        
+        // Smooth scroll to guide
+        setTimeout(() => {
+            quickStart.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }, 100);
+        
+        // Track guide view
+        trackSlicerAction('quick_start_viewed');
+    } else {
+        quickStart.style.display = 'none';
+    }
+}
+
+// Function to track 3D Slicer related actions for analytics
+function trackSlicerAction(action) {
+    // Simple analytics tracking
+    console.log(`3D Slicer Action: ${action}`);
+    
+    // You can integrate with Google Analytics or other tracking services here
+    if (typeof gtag !== 'undefined') {
+        gtag('event', action, {
+            'event_category': '3d_slicer',
+            'event_label': 'slicer_integration'
+        });
+    }
+}
+
+// Function to detect user's operating system and highlight appropriate download
+function detectAndHighlightOS() {
+
+}
+
+// Enhanced file handling for 3D Slicer preparation
+function prepareDicomForSlicer(files) {
+    // Check if files are suitable for 3D Slicer
+    const dicomFiles = Array.from(files).filter(file => {
+        const name = file.name.toLowerCase();
+        return name.endsWith('.dcm') || 
+               name.includes('dicom') || 
+               !name.includes('.') || // Files without extension (common for DICOM)
+               name.endsWith('.ima');
+    });
+    
+    if (dicomFiles.length === 0) {
+        showSlicerTip('No DICOM files detected. 3D Slicer works best with DICOM format files.');
+        return false;
+    }
+    
+    if (dicomFiles.length < 10) {
+        showSlicerTip(`Only ${dicomFiles.length} DICOM files found. For best 3D reconstruction, ensure you have a complete series (typically 50+ slices).`);
+    }
+    
+    return true;
+}
+
+// Function to show contextual tips about 3D Slicer
+function showSlicerTip(message, type = 'info') {
+    const tipContainer = document.createElement('div');
+    tipContainer.className = `slicer-tip ${type}`;
+    tipContainer.style.cssText = `
+        background: ${type === 'info' ? '#e3f2fd' : '#fff3e0'};
+        border-left: 4px solid ${type === 'info' ? '#2196f3' : '#ff9800'};
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 4px;
+        font-size: 0.95em;
+        line-height: 1.4;
+        animation: slideIn 0.3s ease;
+    `;
+    tipContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.2em;">${type === 'info' ? 'ℹ️' : '💡'}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Insert after the upload form
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+        uploadForm.parentNode.insertBefore(tipContainer, uploadForm.nextSibling);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (tipContainer.parentNode) {
+                tipContainer.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => tipContainer.remove(), 300);
+            }
+        }, 10000);
+    }
+}
+
+// Function to create downloadable 3D Slicer preparation guide
+function generateSlicerGuide() {
+    const guideContent = `
+# 3D Slicer DICOM Processing Guide
+
+## Prerequisites
+- Download 3D Slicer from: https://download.slicer.org/
+- Have your DICOM files ready (preferably a complete series)
+
+## Step-by-Step Instructions
+
+### 1. Install and Launch 3D Slicer
+- Run the installer for your operating system
+- Launch 3D Slicer - you'll see the welcome screen
+
+### 2. Load DICOM Data
+- Click "Add DICOM Data" on the welcome screen
+- Navigate to your DICOM folder
+- Select all DICOM files and click "Import"
+- 3D Slicer will automatically organize your data by series
+
+### 3. Load Data into Scene
+- In the DICOM browser, select your series
+- Click "Load" to bring the data into the main viewer
+- You'll see your data in the slice viewers (Red, Yellow, Green)
+
+### 4. Create 3D Visualization
+- Switch to the "Volume Rendering" module
+- Click the eye icon next to your volume to enable rendering
+- Adjust the "Shift" slider to see your 3D model
+- Use presets like "CT-Chest" or "CT-Bone" for common visualizations
+
+### 5. Segmentation (Optional)
+- Switch to "Segment Editor" module
+- Add a new segment for the structure you want to isolate
+- Use tools like "Threshold" to automatically segment by intensity
+- Use "Paint" and "Erase" tools for manual refinements
+
+### 6. Export Your Work
+- For 3D printing: File → Export to STL
+- For sharing: File → Save Scene
+- For images: Use screen capture tools
+
+## Tips for Success
+- Ensure complete DICOM series for best results
+- Experiment with different volume rendering presets
+- Use segmentation to isolate specific anatomical structures
+- Join the 3D Slicer community forum for help
+
+## Resources
+- Official Training: https://training.slicer.org/
+- Community Forum: https://discourse.slicer.org/
+- Documentation: https://slicer.readthedocs.io/
+
+Generated by AORTEC - Advanced Medical Imaging Analysis Platform
+`;
+
+    // Create and download the guide
+    const blob = new Blob([guideContent], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'AORTEC_3D_Slicer_Guide.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    trackSlicerAction('guide_downloaded');
+}
+
+/**
+//Function to add download guide button
+function addDownloadGuideButton() {
+    const supportSection = document.querySelector('.support-section .support-options');
+    if (supportSection) {
+        const guideOption = document.createElement('div');
+        guideOption.className = 'support-option';
+        guideOption.innerHTML = `
+            <h4>📄 Downloadable Guide</h4>
+            <p>Download a comprehensive PDF guide for offline reference</p>
+            <button onclick="generateSlicerGuide()" class="support-link">Download Guide</button>
+        `;
+        supportSection.appendChild(guideOption);
+    }
+}
+ */
+
+// Initialize 3D Slicer service enhancements
+function initializeSlicerService() {
+    // Detect OS and highlight appropriate download
+    setTimeout(() => {
+        detectAndHighlightOS();
+        //addDownloadGuideButton();
+    }, 1000);
+    
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        .recommended-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Track download clicks
+document.addEventListener('click', function(event) {
+    if (event.target.closest('.download-btn')) {
+        const osType = event.target.closest('.download-btn').className.match(/(windows|mac|linux)/);
+        if (osType) {
+            trackSlicerAction(`download_${osType[1]}`);
+        }
+    }
+});
+
+// Initialize when slicer service is selected
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if slicer service is active and initialize
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                const slicerService = document.querySelector('[data-service="slicer_3d"]');
+                if (slicerService && document.querySelector('.slicer-hero')) {
+                    initializeSlicerService();
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+});

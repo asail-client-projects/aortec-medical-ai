@@ -10,7 +10,6 @@ from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from python.dicom_processor import process_dicom_file, read_dicom_folder, extract_zip, process_zip_file
 from python.segmentation import segment_dicom_file, apply_segmentation, process_dicom_folder_for_segmentation
-from python.model_converter import process_dicom_folder_for_viewer, generate_html_viewer
 from python.growth_rate import predict_growth_rate_from_excel, predict_growth_rate_from_input
 from python.rupture_risk import predict_rupture_risk_from_excel, predict_rupture_risk_from_input
 import glob
@@ -51,248 +50,7 @@ def process_dicom_folder_for_image_conversion(directory, output_dir):
     """
     from python.dicom_processor import apply_segmentation
     return apply_segmentation(directory, output_dir)
-
-
-@app.route('/service/dicom_viewer', methods=['POST'])
-def process_dicom_viewer():
-    """
-    Process uploaded DICOM files and create an interactive viewer.
-    This uses your 3dModel.py logic but for web browsers.
-    """
-    try:
-        if 'dicom_file' not in request.files:
-            return jsonify({'error': 'No files uploaded'})
-        
-        files = request.files.getlist('dicom_file')
-        
-        if len(files) == 0 or files[0].filename == '':
-            return jsonify({'error': 'No files selected'})
-        
-        # Check if enough files are uploaded for a proper viewer
-        if len(files) < 3:
-            return jsonify({'error': 'For optimal viewing, please upload at least 3 DICOM files from the same series.'})
-        
-        # Create timestamp for unique folder
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        upload_dir = os.path.join(UPLOAD_FOLDER, f'viewer_{timestamp}')
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Save uploaded files
-        for file in files:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(upload_dir, filename)
-            file.save(file_path)
-        
-        # Define output path for HTML viewer
-        output_filename = f'dicom_viewer_{timestamp}.html'
-        output_path = os.path.join(PROCESSED_FOLDER, output_filename)
-        
-        # Process uploaded files to generate interactive viewer
-        try:
-            # Import the web-compatible DICOM viewer
-            from python.dicom_web_viewer import create_dicom_web_viewer
-            
-            # Generate DICOM viewer (similar to your 3dModel.py but for web)
-            result = create_dicom_web_viewer(upload_dir, output_path)
-            
-            # Prepare URLs for response
-            viewer_url = f"/serve/processed/{output_filename}"
-            preview_url = f"/serve/processed/{os.path.basename(result['preview_image'])}"
-            
-            # Prepare response
-            return jsonify({
-                'message': 'DICOM viewer generated successfully!',
-                'output': preview_url,  # Preview image for immediate display
-                'viewer_url': viewer_url,  # Interactive viewer
-                'metadata': result['metadata'],
-                'type': 'dicom_viewer'
-            })
-            
-        except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            app.logger.error(f"Error processing DICOM viewer: {str(e)}\n{error_details}")
-            return jsonify({'error': f"Error generating DICOM viewer: {str(e)}"})
     
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        app.logger.error(f"Server error in DICOM viewer route: {str(e)}\n{error_details}")
-        return jsonify({'error': f"Server error: {str(e)}"})
-
-
-@app.route('/process_local_directory', methods=['POST'])
-def process_local_directory():
-    """Process DICOM files from a local directory on the server."""
-    directory = request.form.get('directory')
-    service_type = request.form.get('service_type')
-    
-    # Log request details for debugging
-    print(f"Processing local directory: {directory}")
-    print(f"Service type: {service_type}")
-    print(f"Form data: {request.form}")
-    
-    if not directory or not os.path.exists(directory):
-        return jsonify({'error': f'Directory not found: {directory}'}), 404
-        
-    try:
-        output_dir = os.path.join(app.config['PROCESSED_FOLDER'], f'local_{service_type}')
-        os.makedirs(output_dir, exist_ok=True)
-        
-        processed_files = []
-        
-        if service_type == 'segmentation':
-            # Process for segmentation
-            processed_files = process_dicom_folder_for_segmentation(directory, output_dir)
-            
-        elif service_type == '3d_model':
-            # Process for 3D MODEL - FIXED FUNCTION CALL
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            output_filename = f'aaa_model_{timestamp}.stl'  # STL file
-            output_path = os.path.join(output_dir, output_filename)
-            
-            # Get threshold parameters if provided
-            lower_threshold = request.form.get('lower_threshold', None)
-            upper_threshold = request.form.get('upper_threshold', None)
-            
-            # Convert string values to float if provided
-            if lower_threshold and lower_threshold.strip():
-                try:
-                    lower_threshold = float(lower_threshold)
-                except ValueError:
-                    lower_threshold = None
-            else:
-                lower_threshold = None
-                
-            if upper_threshold and upper_threshold.strip():
-                try:
-                    upper_threshold = float(upper_threshold)
-                except ValueError:
-                    upper_threshold = None
-            else:
-                upper_threshold = None
-            
-            # Log threshold values for debugging
-            print(f"Using threshold values - Lower: {lower_threshold}, Upper: {upper_threshold}")
-            
-            # FIXED: Use the correct function from model_converter.py for STL generation
-            from python.model_converter import convert_to_3d_model
-            
-            # Generate STL model (NOT 2D visualization!)
-            try:
-                stl_output = convert_to_3d_model(
-                    directory,
-                    output_path,
-                    lower_threshold=lower_threshold,
-                    upper_threshold=upper_threshold
-                )
-                
-                # Verify the STL file was created
-                if not os.path.exists(stl_output):
-                    raise FileNotFoundError(f"Expected STL file was not created: {stl_output}")
-                
-                # Check if preview image exists
-                preview_path = stl_output.replace('.stl', '_preview.png')
-                
-                processed_files = [stl_output]
-                if os.path.exists(preview_path):
-                    processed_files.append(preview_path)
-                    
-                print(f"Generated STL file: {stl_output}")
-            except Exception as stl_error:
-                # If STL generation fails, create an error message
-                import traceback
-                print(f"Error in STL generation: {str(stl_error)}")
-                print(traceback.format_exc())
-                
-                # Create a simple error file
-                error_path = output_path.replace('.stl', '_error.txt')
-                with open(error_path, 'w') as f:
-                    f.write(f"Error generating 3D STL model: {str(stl_error)}")
-                
-                processed_files = [error_path]
-        
-        # Add the image_conversion service processing
-        elif service_type == "image_conversion":
-            # Process image conversion
-            from python.dicom_processor import process_dicom_folder
-            processed_files = process_dicom_folder(directory, output_dir)
-        
-        if not processed_files:
-            return jsonify({'error': 'No files could be processed'}), 400
-        
-        # Make sure files exist
-        processed_files = [f for f in processed_files if os.path.exists(f)]
-        if not processed_files:
-            return jsonify({'error': 'Files were processed but could not be found'}), 500
-            
-        # Return the results - SIMPLIFIED
-        output_url = f"/serve/processed/local_{service_type}/{os.path.basename(processed_files[0])}"
-        
-        # SIMPLIFIED response without all_outputs
-        response_data = {
-            "message": f"File processed successfully", 
-            "output": output_url
-        }
-        
-        # Add viewer URL for STL files
-        if service_type == '3d_model' and processed_files[0].endswith('.stl'):
-            stl_filename = os.path.basename(processed_files[0])
-            response_data["viewer_url"] = f"/view_model/{stl_filename}"
-            response_data["file_type"] = "stl"
-        
-        # Log the response for debugging
-        print(f"Sending response: {response_data}")
-        
-        return jsonify(response_data), 200
-        
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"Error in local processing: {str(e)}\n{error_details}")
-        return jsonify({"error": str(e)}), 500
-    
-
-@app.route('/view_dicom/<path:viewer_name>')
-def view_dicom_viewer(viewer_name):
-    """
-    Serve the interactive DICOM viewer HTML file.
-    This replaces the tkinter GUI with a web interface.
-    """
-    # Ensure viewer name is sanitized
-    viewer_name = secure_filename(viewer_name)
-    
-    # Try to find the viewer in various locations
-    possible_paths = [
-        os.path.join(PROCESSED_FOLDER, viewer_name),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', viewer_name),
-        os.path.join(PROCESSED_FOLDER, f"{viewer_name}.html"),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{viewer_name}.html"),
-    ]
-    
-    # Add .html extension and check
-    if not viewer_name.lower().endswith('.html'):
-        html_path = f"{viewer_name}.html"
-        possible_paths.append(os.path.join(PROCESSED_FOLDER, html_path))
-        possible_paths.append(os.path.join(PROCESSED_FOLDER, 'local_3d_model', html_path))
-    
-    viewer_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            viewer_path = path
-            break
-    
-    # Check if file exists
-    if not viewer_path:
-        return f"DICOM viewer not found: {viewer_name}", 404
-    
-    # Read and serve the HTML content
-    try:
-        with open(viewer_path, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-        return html_content
-    except Exception as e:
-        return f"Error loading DICOM viewer: {str(e)}", 500
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -382,209 +140,6 @@ def page_not_found(e):
         ''', 404
 
 
-# Add these routes to your Flask application
-@app.route('/service/3d_model', methods=['POST'])
-def process_3d_model():
-    """
-    Process uploaded DICOM files and convert them to visualizations.
-    This now creates a 2D visualization rather than a 3D STL model.
-    """
-    try:
-        if 'dicom_file' not in request.files:
-            return jsonify({'error': 'No files uploaded'})
-        
-        files = request.files.getlist('dicom_file')
-        
-        if len(files) == 0 or files[0].filename == '':
-            return jsonify({'error': 'No files selected'})
-        
-        # Check if enough files are uploaded for a proper visualization
-        if len(files) < 5:
-            return jsonify({'error': 'For optimal visualization, a complete series of DICOM files is required (typically 5+ files). Please select a folder with more DICOM files.'})
-        
-        # Create timestamp for unique folder
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        upload_dir = os.path.join(UPLOAD_FOLDER, f'model_{timestamp}')
-        os.makedirs(upload_dir, exist_ok=True)
-        
-        # Save uploaded files
-        for file in files:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(upload_dir, filename)
-            file.save(file_path)
-        
-        # Define output path
-        output_filename = f'dicom_visualization_{timestamp}.png'
-        output_path = os.path.join(PROCESSED_FOLDER, output_filename)
-        
-        # Process uploaded files to generate visualization
-        try:
-            # Get threshold parameters if provided
-            lower_threshold = request.form.get('lower_threshold', None)
-            upper_threshold = request.form.get('upper_threshold', None)
-            
-            # Convert string values to float if provided
-            if lower_threshold and lower_threshold.strip():
-                lower_threshold = float(lower_threshold)
-            else:
-                lower_threshold = None
-                
-            if upper_threshold and upper_threshold.strip():
-                upper_threshold = float(upper_threshold)
-            else:
-                upper_threshold = None
-            
-            # Import the new 2D model function
-            from python.dicom_visualizer import convert_to_2d_model
-            
-            # Generate 2D model visualization
-            main_output, additional_outputs = convert_to_2d_model(
-                upload_dir, 
-                output_path,
-                lower_threshold=lower_threshold,
-                upper_threshold=upper_threshold
-            )
-            
-            # Prepare URLs for response
-            output_url = f"/serve/processed/{output_filename}"
-            
-            # SIMPLIFIED RESPONSE - REMOVE all_outputs
-            # Prepare response with only main output
-            return jsonify({
-                'message': 'DICOM visualization generated successfully!',
-                'output': output_url
-                # REMOVED: 'all_outputs': all_outputs
-            })
-            
-        except Exception as e:
-            import traceback
-            error_details = traceback.format_exc()
-            app.logger.error(f"Error processing 3D model: {str(e)}\n{error_details}")
-            return jsonify({'error': f"Error generating 3D model: {str(e)}"})
-    
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        app.logger.error(f"Server error in 3D model route: {str(e)}\n{error_details}")
-        return jsonify({'error': f"Server error: {str(e)}"})
-    
-
-@app.route('/view_model/<path:model_name>')
-def view_model(model_name):
-    """
-    Render a model viewer for the given model name.
-    Now supports both HTML viewers and image displays.
-    """
-    # Ensure model name is sanitized
-    model_name = secure_filename(model_name)
-    
-    # Try to find the model in various locations
-    possible_paths = [
-        os.path.join(PROCESSED_FOLDER, model_name),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', model_name),
-        os.path.join(PROCESSED_FOLDER, f"{model_name}.html"),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{model_name}.html"),
-        os.path.join(PROCESSED_FOLDER, f"{model_name}.png"),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', f"{model_name}.png"),
-    ]
-    
-    # Check for HTML files in dicom_viewer folders
-    import glob
-    dicom_viewer_folders = glob.glob(os.path.join(PROCESSED_FOLDER, '**/dicom_viewer_*'), recursive=True)
-    for folder in dicom_viewer_folders:
-        possible_paths.append(os.path.join(folder, model_name))
-        possible_paths.append(os.path.join(folder, 'interactive_viewer.html'))
-    
-    model_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            model_path = path
-            break
-    
-    # Check if file exists
-    if not model_path:
-        return f"Model not found: {model_name}", 404
-    
-    # Determine if it's an HTML file or an image
-    if model_path.lower().endswith('.html'):
-        # For HTML files, read and return content
-        try:
-            with open(model_path, 'r', encoding='utf-8') as f:
-                html_content = f.read()
-            return html_content
-        except Exception as e:
-            return f"Error reading HTML file: {str(e)}", 500
-    else:
-        # For images, create a simple HTML page to display the image
-        image_url = f"/serve/processed/{os.path.relpath(model_path, PROCESSED_FOLDER)}"
-        html_content = f"""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>AORTEC DICOM Viewer</title>
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 20px;
-                    background-color: #1a1a1a;
-                    color: white;
-                    font-family: Arial, sans-serif;
-                    text-align: center;
-                }}
-                h1 {{
-                    color: #f9a826;
-                }}
-                .viewer-container {{
-                    margin: 20px auto;
-                    background-color: #2a2a2a;
-                    padding: 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                    max-width: 90%;
-                }}
-                img {{
-                    max-width: 100%;
-                    height: auto;
-                    border: 2px solid #f9a826;
-                    border-radius: 5px;
-                }}
-                .instructions {{
-                    background-color: #3a3a3a;
-                    border: 1px solid #555;
-                    border-radius: 4px;
-                    padding: 15px;
-                    margin: 15px 0;
-                    text-align: left;
-                }}
-                .instructions h3 {{
-                    color: #f9a826;
-                    margin-top: 0;
-                }}
-            </style>
-        </head>
-        <body>
-            <h1>AORTEC DICOM Viewer</h1>
-            <div class="viewer-container">
-                <img src="{image_url}" alt="DICOM Viewer">
-                <div class="instructions">
-                    <h3>About this visualization:</h3>
-                    <p>This image shows a DICOM viewer with measurement rulers. The yellow rulers indicate measurements in millimeters, and the red tick marks show measurement intervals.</p>
-                    <ul>
-                        <li>Yellow rulers show precise measurements in millimeters</li>
-                        <li>Red tick marks indicate measurement intervals</li>
-                        <li>Pixel spacing information is displayed for accuracy</li>
-                        <li>This viewer helps with medical image analysis and measurements</li>
-                    </ul>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        return html_content
-
-
 @app.route('/serve/processed/<path:filename>')
 def serve_processed_file(filename):
     """
@@ -593,7 +148,6 @@ def serve_processed_file(filename):
     # Search for the file in various locations
     possible_paths = [
         os.path.join(PROCESSED_FOLDER, filename),
-        os.path.join(PROCESSED_FOLDER, 'local_3d_model', filename),
         os.path.join(PROCESSED_FOLDER, 'local_image_conversion', filename),
     ]
     
@@ -697,10 +251,14 @@ def test_file_access(filename):
 @app.route('/service/<service_name>', methods=['POST'])
 def service_handler(service_name):
     """
-    Unified service handler for all processing services.
-    Handles both 3d_model and image_conversion services.
+    Simplified service handler for processing services.
+    Only handles image_conversion now - 3D Slicer service is informational only.
     """
     try:
+        # Only process image_conversion service
+        if service_name != "image_conversion":
+            return jsonify({"error": f"Service '{service_name}' is not available for file processing. Please use the information provided in the service."}), 400
+        
         # File upload - handle multiple files
         if 'dicom_file' not in request.files:
             return jsonify({"error": "No files provided"}), 400
@@ -715,124 +273,46 @@ def service_handler(service_name):
         
         processed_files = []
         
-        # Special handling for 3D model service
-        if service_name == "3d_model":
-            # Check if enough files are uploaded for a proper visualization
-            if len(files) < 5:
-                return jsonify({'error': 'For optimal visualization, a complete series of DICOM files is required (typically 5+ files). Please select a folder with more DICOM files.'}), 400
-            
-            # Create timestamp for unique folder
-            timestamp = time.strftime("%Y%m%d-%H%M%S")
-            upload_dir = os.path.join(UPLOAD_FOLDER, f'model_{timestamp}')
-            os.makedirs(upload_dir, exist_ok=True)
-            
-            # Save uploaded files
-            for file in files:
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(upload_dir, filename)
-                file.save(file_path)
-            
-            # Define output path
-            output_filename = f'dicom_visualization_{timestamp}.png'
-            output_path = os.path.join(PROCESSED_FOLDER, output_filename)
-            
-            try:
-                # Get threshold parameters if provided
-                lower_threshold = request.form.get('lower_threshold', None)
-                upper_threshold = request.form.get('upper_threshold', None)
+        # Process each file for image conversion
+        for uploaded_file in files:
+            if uploaded_file.filename == '':
+                continue
                 
-                # Convert string values to float if provided
-                if lower_threshold and lower_threshold.strip():
-                    lower_threshold = float(lower_threshold)
+            filename = secure_filename(uploaded_file.filename)
+            filepath = os.path.join(temp_dir, filename)
+            uploaded_file.save(filepath)
+            
+            # Process based on the service selected
+            if service_name == "image_conversion":
+                # Check if it's a ZIP file
+                if filename.lower().endswith('.zip'):
+                    from python.dicom_processor import process_zip_file
+                    output_files = process_zip_file(filepath, app.config['PROCESSED_FOLDER'])
+                    processed_files.extend(output_files)
                 else:
-                    lower_threshold = None
-                    
-                if upper_threshold and upper_threshold.strip():
-                    upper_threshold = float(upper_threshold)
-                else:
-                    upper_threshold = None
-                
-                # FIXED IMPORT - Use the correct function name from dicom_visualizer.py
-                # Looking at your dicom_visualizer.py, the function is called create_2d_model_from_dicom_folder
-                from python.dicom_visualizer import create_2d_model_from_dicom_folder
-                
-                # Generate 2D model visualization using the correct function
-                main_output = create_2d_model_from_dicom_folder(
-                    upload_dir, 
-                    output_path,
-                    lower_threshold=lower_threshold,
-                    upper_threshold=upper_threshold
-                )
-                
-                # Prepare URLs for response - SIMPLIFIED
-                output_url = f"/serve/processed/{output_filename}"
-                
-                # SIMPLIFIED response for 3D model
-                return jsonify({
-                    'message': 'DICOM visualization generated successfully!',
-                    'output': output_url
-                }), 200
-                
-            except Exception as e:
-                import traceback
-                error_details = traceback.format_exc()
-                app.logger.error(f"Error processing 3D model: {str(e)}\n{error_details}")
-                return jsonify({'error': f"Error generating 3D model: {str(e)}"}), 500
-        
-        # Handle other services (image_conversion, segmentation, etc.)
-        else:
-            # Process each file
-            for uploaded_file in files:
-                if uploaded_file.filename == '':
-                    continue
-                    
-                filename = secure_filename(uploaded_file.filename)
-                filepath = os.path.join(temp_dir, filename)
-                uploaded_file.save(filepath)
-                
-                # Process based on the service selected
-                if service_name == "image_conversion":
-                    # Check if it's a ZIP file
-                    if filename.lower().endswith('.zip'):
-                        from python.dicom_processor import process_zip_file
-                        output_files = process_zip_file(filepath, app.config['PROCESSED_FOLDER'])
-                        processed_files.extend(output_files)
-                    else:
-                        # Process as DICOM file
-                        base_filename = os.path.basename(filepath)
-                        output_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{base_filename}.jpg")
-                        
-                        try:
-                            from python.dicom_processor import process_dicom_file
-                            output_file = process_dicom_file(filepath, output_path)
-                            processed_files.append(output_file)
-                        except Exception as e:
-                            print(f"Error processing {filename}: {str(e)}")
-                
-                elif service_name == "segmentation":
-                    # Process as segmentation
+                    # Process as DICOM file
                     base_filename = os.path.basename(filepath)
-                    output_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{base_filename}_segmented.png")
+                    output_path = os.path.join(app.config['PROCESSED_FOLDER'], f"{base_filename}.jpg")
                     
                     try:
-                        from python.segmentation import segment_dicom_file
-                        output_file = segment_dicom_file(filepath, output_path)
+                        from python.dicom_processor import process_dicom_file
+                        output_file = process_dicom_file(filepath, output_path)
                         processed_files.append(output_file)
                     except Exception as e:
-                        print(f"Error processing segmentation for {filename}: {str(e)}")
+                        print(f"Error processing {filename}: {str(e)}")
+        
+        # Return results
+        if not processed_files:
+            return jsonify({"error": "No valid files could be processed"}), 400
             
-            # Return results for non-3D services
-            if not processed_files:
-                return jsonify({"error": "No valid files could be processed"}), 400
-                
-            # Return the first processed file for display - SIMPLIFIED
-            output_url = f"/serve/processed/{os.path.basename(processed_files[0])}"
-            
-            # SIMPLIFIED response
-            return jsonify({
-                "message": f"File processed successfully", 
-                "output": output_url
-            }), 200
+        # Return the first processed file for display - SIMPLIFIED
+        output_url = f"/serve/processed/{os.path.basename(processed_files[0])}"
+        
+        # SIMPLIFIED response
+        return jsonify({
+            "message": f"File processed successfully", 
+            "output": output_url
+        }), 200
     
     except Exception as e:
         import traceback
@@ -1044,6 +524,111 @@ def download_zip_file(filename):
         print(f"Error sending ZIP file {zip_path}: {str(e)}")
         return f"Error sending ZIP file: {str(e)}", 500
 
+
+@app.route('/api/slicer_analytics', methods=['POST'])
+def track_slicer_analytics():
+    """
+    Optional route to track 3D Slicer service usage for analytics.
+    This helps you understand how users interact with the service.
+    """
+    try:
+        data = request.get_json()
+        action = data.get('action', '')
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        user_agent = request.headers.get('User-Agent', '')
+        
+        # Log analytics data (you can store in database, file, or send to analytics service)
+        analytics_data = {
+            'timestamp': timestamp,
+            'action': action,
+            'user_agent': user_agent,
+            'ip': request.remote_addr
+        }
+        
+        # Simple file logging (you can replace with database storage)
+        log_file = os.path.join('logs', 'slicer_analytics.log')
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        
+        with open(log_file, 'a') as f:
+            f.write(f"{timestamp} - {action} - {request.remote_addr}\n")
+        
+        return jsonify({'status': 'success'}), 200
+        
+    except Exception as e:
+        print(f"Analytics tracking error: {str(e)}")
+        return jsonify({'status': 'error'}), 500
+
+@app.route('/api/track_download/<os_type>')
+def track_slicer_download(os_type):
+    """
+    Track when users click download links for different operating systems.
+    """
+    try:
+        # Log the download
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        log_entry = f"{timestamp} - Download: {os_type} - {request.remote_addr}\n"
+        
+        log_file = os.path.join('logs', 'slicer_downloads.log')
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        
+        with open(log_file, 'a') as f:
+            f.write(log_entry)
+        
+        # Redirect to the actual 3D Slicer download page
+        return redirect('https://download.slicer.org/')
+        
+    except Exception as e:
+        print(f"Download tracking error: {str(e)}")
+        # Fallback: redirect to download page even if tracking fails
+        return redirect('https://download.slicer.org/')
+
+# Optional: Create a route to serve usage statistics (for admin dashboard)
+@app.route('/admin/slicer_stats')
+def slicer_usage_stats():
+    """
+    Display 3D Slicer service usage statistics (admin only).
+    You might want to add authentication here.
+    """
+    try:
+        stats = {
+            'total_visits': 0,
+            'video_views': 0,
+            'guide_views': 0,
+            'downloads_by_os': {'windows': 0, 'mac': 0, 'linux': 0}
+        }
+        
+        # Read analytics log if it exists
+        analytics_file = os.path.join('logs', 'slicer_analytics.log')
+        if os.path.exists(analytics_file):
+            with open(analytics_file, 'r') as f:
+                lines = f.readlines()
+                stats['total_visits'] = len(lines)
+                
+                for line in lines:
+                    if 'video_tutorial_viewed' in line:
+                        stats['video_views'] += 1
+                    elif 'quick_start_viewed' in line:
+                        stats['guide_views'] += 1
+        
+        # Read download log if it exists
+        downloads_file = os.path.join('logs', 'slicer_downloads.log')
+        if os.path.exists(downloads_file):
+            with open(downloads_file, 'r') as f:
+                lines = f.readlines()
+                
+                for line in lines:
+                    if 'windows' in line.lower():
+                        stats['downloads_by_os']['windows'] += 1
+                    elif 'mac' in line.lower():
+                        stats['downloads_by_os']['mac'] += 1
+                    elif 'linux' in line.lower():
+                        stats['downloads_by_os']['linux'] += 1
+        
+        return jsonify(stats), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 
 # Home page route
 @app.route('/')
