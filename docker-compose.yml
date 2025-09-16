@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: aortec_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/var/log/gunicorn
+    environment:
+      - FLASK_ENV=production
+      - MAX_CONTENT_LENGTH=2147483648
+    networks:
+      - aortec_network
+    depends_on:
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: aortec_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/usr/share/nginx/html/static:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - aortec_network
+    depends_on:
+      - web
+
+  redis:
+    image: redis:alpine
+    container_name: aortec_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - aortec_network
+
+networks:
+  aortec_network:
+    driver: bridge
+
+volumes:
+  redis_data:

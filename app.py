@@ -5,7 +5,7 @@ import pydicom
 import shutil
 import numpy as np
 import SimpleITK as sitk
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, redirect
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from python.dicom_processor import process_dicom_file, read_dicom_folder, extract_zip, process_zip_file
@@ -16,18 +16,35 @@ import glob
 from flask_cors import CORS
 import time
 import tempfile
+from dotenv import load_dotenv
+import logging
+from logging.handlers import RotatingFileHandler
+from datetime import datetime
+from prometheus_flask_exporter import PrometheusMetrics
+
+# Load environment variables
+load_dotenv()
 
 
 # Initialize Flask app
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024 * 1024  # 2 GB max upload size
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for development
-CORS(app)  # Enable Cross-Origin Resource Sharing
+
+# Production configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-this-in-production')
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get('MAX_CONTENT_LENGTH', 2 * 1024 * 1024 * 1024))  # 2 GB max upload size
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 if os.environ.get('FLASK_ENV') == 'development' else 3600
+
+# CORS configuration
+cors_origins = os.environ.get('CORS_ORIGINS', '*')
+CORS(app, origins=cors_origins.split(',') if cors_origins != '*' else '*')
+
+# Initialize Prometheus metrics
+metrics = PrometheusMetrics(app)
 
 # Configuration
-UPLOAD_FOLDER = 'uploads/'
-PROCESSED_FOLDER = 'processed/'
+UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER', 'uploads/')
+PROCESSED_FOLDER = os.environ.get('PROCESSED_FOLDER', 'processed/')
 ALLOWED_EXTENSIONS = {'dcm', 'png', 'jpg', 'jpeg', 'zip', '', 'xlsx', 'xls', 'csv'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -36,6 +53,19 @@ app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 # Ensure upload and processed folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# Configure logging for production
+if not app.debug and os.environ.get('FLASK_ENV') == 'production':
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    file_handler = RotatingFileHandler('logs/aortec.log', maxBytes=10240000, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('AORTEC Medical AI startup')
 
 def allowed_file(filename):
     """Check if a file has an allowed extension or no extension."""
@@ -121,6 +151,28 @@ def test_file(filepath):
     
     return jsonify(result)
 
+
+# Add health check endpoint
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring."""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'environment': os.environ.get('FLASK_ENV', 'development')
+    }), 200
+
+# Add security headers middleware
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all responses."""
+    if os.environ.get('FLASK_ENV') == 'production':
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        if request.is_secure:
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -666,6 +718,6 @@ def legal_disclaimers():
     return render_template('legal.html')
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=True)
+    debug_mode = os.environ.get('FLASK_ENV') != 'production'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode, use_reloader=debug_mode)

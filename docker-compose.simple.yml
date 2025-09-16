@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  aortec:
+    build: 
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: aortec_app
+    restart: unless-stopped
+    ports:
+      - "80:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+      - ./models:/app/models
+      - ./data:/app/data
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=internal-use-only-2024
